@@ -1,0 +1,47 @@
+# 7-Zip 26.04 x64. The official installer is not Authenticode-signed.
+# Trust is the SHA-256 published with the GitHub release asset.
+name: 7-Zip
+version: "26.04"
+publisher: Igor Pavlov
+architecture: x64
+description: File archiver. The installer is the official 26.04 x64 executable from the 7-Zip GitHub release.
+license: LGPL-2.1-or-later
+informationUrl: https://www.7-zip.org/
+
+source:
+  type: url
+  url: https://github.com/ip7z/7zip/releases/download/26.04/7z2604-x64.exe
+  fileName: 7z2604-x64.exe
+
+trust:
+  algorithm: SHA256
+  value: d54bf805f9f3704d1e8db2fa3498ae7ef2df0312b40b558e7c71c734430a665d
+  signature:
+    required: false
+
+install:
+  arguments: /S
+
+uninstall:
+  filePath: "{ProgramFiles}\\7-Zip\\Uninstall.exe"
+  arguments: /S
+
+detection:
+  type: file
+  path: "{ProgramFiles}\\7-Zip\\7z.exe"
+
+psadt:
+  appVendor: Igor Pavlov
+  appName: 7-Zip
+  appLang: EN
+  appRevision: "01"
+  processesToClose:
+    - name: 7zFM
+      description: 7-Zip File Manager
+    - name: 7zG
+      description: 7-Zip
+  successExitCodes:
+    - 0
+  rebootExitCodes:
+    - 1641
+    - 3010

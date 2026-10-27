@@ -1,0 +1,117 @@
+# Builds the two example apps and runs the offline demo.
+# Intune upload is off unless a manual run sets upload=true and the SAF_INTUNE_* secrets exist.
+# -IncludeToolkit downloads the pinned PSAppDeployToolkit 4.1.8 template (LGPL-3.0-or-later).
+# -DownloadContentPrepTool downloads Microsoft Win32 Content Prep Tool 1.8.7.
+# Running this workflow means the operator accepts that tool's Microsoft license terms:
+# https://github.com/microsoft/Microsoft-Win32-Content-Prep-Tool/blob/v1.8.7/Microsoft%20License%20Terms%20For%20Win32%20Content%20Prep%20Tool.pdf
+
+name: Package
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: Publish each built Win32 app to Intune. Requires all three SAF_INTUNE_* secrets. Does not create an assignment.
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Pester
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Pester 5 and run tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          $installed = Get-Module -ListAvailable -Name Pester | Where-Object { $_.Version -ge [version]'5.0.0' } | Select-Object -First 1
+          if (-not $installed) {
+            Install-Module -Name Pester -MinimumVersion 5.0.0 -Scope CurrentUser -Force
+          }
+          ./scripts/Invoke-Tests.ps1
+
+  demo:
+    name: Offline demo
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run the mocked pipeline
+        shell: pwsh
+        run: ./demo/Invoke-Demo.ps1 -Destination "${{ github.workspace }}/demo-output"
+      - name: Upload demo reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-reports
+          path: demo-output/**/REPORT.md
+          if-no-files-found: error
+
+  package:
+    name: Package ${{ matrix.app }}
+    runs-on: windows-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [7zip, notepadpp]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch, verify, wrap, package, and smoke test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $app = '${{ matrix.app }}'
+          $destination = Join-Path $env:GITHUB_WORKSPACE "out/$app"
+          ./scripts/Invoke-Package.ps1 -App $app -Destination $destination -IncludeToolkit -DownloadContentPrepTool -SmokeTest -SmokeTestMode Command -Force
+          $report = Join-Path $destination 'REPORT.md'
+          $packages = @(Get-ChildItem -LiteralPath (Join-Path $destination 'intunewin') -Filter '*.intunewin' -ErrorAction SilentlyContinue)
+          if (-not (Test-Path -LiteralPath $report)) { throw "REPORT.md was not written for $app." }
+          if ($packages.Count -lt 1) { throw "No .intunewin file was written for $app." }
+      - name: Add the package report to the job summary
+        if: always()
+        shell: pwsh
+        run: |
+          $report = Join-Path $env:GITHUB_WORKSPACE "out/${{ matrix.app }}/REPORT.md"
+          if (Test-Path -LiteralPath $report) {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value (Get-Content -Raw -LiteralPath $report)
+          }
+      - name: Upload package artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.app }}
+          path: out/${{ matrix.app }}
+          if-no-files-found: error
+
+  intune-upload:
+    name: Upload ${{ matrix.app }}
+    needs: package
+    if: github.event_name == 'workflow_dispatch' && inputs.upload
+    runs-on: windows-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [7zip, notepadpp]
+    env:
+      SAF_INTUNE_TENANT_ID: ${{ secrets.SAF_INTUNE_TENANT_ID }}
+      SAF_INTUNE_CLIENT_ID: ${{ secrets.SAF_INTUNE_CLIENT_ID }}
+      SAF_INTUNE_CLIENT_SECRET: ${{ secrets.SAF_INTUNE_CLIENT_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild the verified package and upload it
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $app = '${{ matrix.app }}'
+          $destination = Join-Path $env:GITHUB_WORKSPACE "out/$app"
+          ./scripts/Invoke-Package.ps1 -App $app -Destination $destination -IncludeToolkit -DownloadContentPrepTool -Upload -Force

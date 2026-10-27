@@ -1,0 +1,48 @@
+# Notepad++ 8.9.8.1 x64. The installer is Authenticode-signed.
+# Subject and thumbprint were read from that release's leaf certificate.
+# A renewed certificate will fail this build until the pin is reviewed and updated.
+name: Notepad++
+version: "8.9.8.1"
+publisher: NOTEPAD++
+architecture: x64
+description: Source code editor. The installer is the official 8.9.8.1 x64 executable from the Notepad++ GitHub release.
+license: GPL-3.0-or-later
+informationUrl: https://notepad-plus-plus.org/
+
+source:
+  type: url
+  url: https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.8.1/npp.8.9.8.1.Installer.x64.exe
+  fileName: npp.8.9.8.1.Installer.x64.exe
+
+trust:
+  algorithm: SHA256
+  value: 26f3bcced788fadbac4e7e577b430ea2ce6060cf3bcad993ef4612ecd7d743da
+  signature:
+    required: true
+    subjectContains: NOTEPAD++
+    thumbprint: 1E8E0D13B608BA908572C1A129FAEC5D228DF8A2
+
+install:
+  arguments: /S
+
+uninstall:
+  filePath: "{ProgramFiles}\\Notepad++\\uninstall.exe"
+  arguments: /S
+
+detection:
+  type: file
+  path: "{ProgramFiles}\\Notepad++\\notepad++.exe"
+
+psadt:
+  appVendor: NOTEPAD++
+  appName: Notepad++
+  appLang: EN
+  appRevision: "01"
+  processesToClose:
+    - name: notepad++
+      description: Notepad++
+  successExitCodes:
+    - 0
+  rebootExitCodes:
+    - 1641
+    - 3010
