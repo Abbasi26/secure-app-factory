@@ -101,10 +101,15 @@ function Get-SafExternalTools {
 
 function Test-SafHttpsUrl {
     param([AllowEmptyString()][string]$Url)
+
     if ([string]::IsNullOrWhiteSpace($Url)) { return $false }
-    if ($Url -notmatch '^https://') { return $false }
-    if ($Url -match '^[Hh][Tt][Tt][Pp][Ss]://[^/\s]*@') { return $false }
-    return $true
+    $parsed = $null
+    if (-not [System.Uri]::TryCreate($Url, [System.UriKind]::Absolute, [ref]$parsed)) {
+        return $false
+    }
+    return $parsed.Scheme -eq 'https' -and
+        -not [string]::IsNullOrEmpty($parsed.Host) -and
+        [string]::IsNullOrEmpty($parsed.UserInfo)
 }
 
 function Expand-SafMachinePath {
@@ -277,3 +282,4 @@ function Get-SafIsWindows {
     }
     return $false
 }
+
