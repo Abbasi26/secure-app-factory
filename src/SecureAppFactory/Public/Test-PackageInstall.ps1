@@ -61,7 +61,7 @@ function Test-SafDetection {
     $type = [string]$Manifest.detection.type
     $path = Expand-SafMachinePath -Path ([string]$Manifest.detection.path)
     if ($type -eq 'file') {
-        return [bool](Test-Path -LiteralPath $path)
+        return [bool](Test-Path -LiteralPath $path -PathType Leaf)
     }
     if (-not (Get-SafIsWindows)) {
         throw 'Registry detection runs on Windows only.'
