@@ -1,6 +1,5 @@
 # Restore report: secure-app-factory
 
-- Source transcript: `bc-516efa25-3ab6-5f74-8a7e-3571410fcdea.jsonl`
 - Method: replay of `search_replace` editFileResult unified diffs in order; binary demo fixtures recreated from transcript Python one-liner
 - NVIDIA / OpenRouter generation: **not needed** (full tree reconstructable; all tests green)
 - Restored from transcript diffs: 36 paths via search_replace
