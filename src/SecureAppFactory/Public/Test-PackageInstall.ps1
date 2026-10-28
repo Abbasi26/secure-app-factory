@@ -158,7 +158,7 @@ function Test-PackageInstall {
         [string]$PackageRoot,
         [switch]$SmokeTest,
         [ValidateRange(1, 2147483)][int]$TimeoutSeconds = 600,
-        [int]$DetectionRetries = 10,
+        [ValidateRange(1, 2147483647)][int]$DetectionRetries = 10,
         [ValidateRange(0, 2147483647)][int]$DetectionDelaySeconds = 2
     )
 
