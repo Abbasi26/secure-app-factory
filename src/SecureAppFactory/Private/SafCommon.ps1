@@ -203,7 +203,7 @@ function Invoke-SafDownloadFile {
     )
 
     if (-not (Test-SafHttpsUrl $Uri)) {
-        throw "Refusing to download a URL that is not https, or that embeds credentials: $Uri"
+        throw 'Refusing to download a URL that is not https, or that embeds credentials.'
     }
     $parent = Split-Path -Parent $Destination
     if ($parent -and -not (Test-Path -LiteralPath $parent)) {
