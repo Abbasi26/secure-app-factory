@@ -101,7 +101,7 @@ function Invoke-SafCheckedProcess {
     param(
         [Parameter(Mandatory = $true)][string]$FilePath,
         [AllowEmptyString()][string]$Arguments,
-        [int]$TimeoutSeconds
+        [ValidateRange(1, 2147483)][int]$TimeoutSeconds
     )
 
     if (-not (Test-Path -LiteralPath $FilePath)) {
@@ -157,7 +157,7 @@ function Test-PackageInstall {
         [string]$Mode = 'Command',
         [string]$PackageRoot,
         [switch]$SmokeTest,
-        [int]$TimeoutSeconds = 600,
+        [ValidateRange(1, 2147483)][int]$TimeoutSeconds = 600,
         [int]$DetectionRetries = 10,
         [int]$DetectionDelaySeconds = 2
     )
@@ -245,3 +245,4 @@ function Test-PackageInstall {
         Reason            = 'Silent install, detection, and uninstall completed.'
     }
 }
+
