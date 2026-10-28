@@ -172,7 +172,7 @@ function Assert-SafDestination {
     if ($ManifestPath) {
         $appDir = Split-Path -Parent $ManifestPath
         $repo = [System.IO.Path]::GetFullPath((Join-Path $appDir '../..'))
-        if ($full -eq $repo) {
+        if ($full.TrimEnd('\', '/') -eq $repo.TrimEnd('\', '/')) {
             throw 'Refusing to use the repository root as the destination.'
         }
     }
@@ -282,4 +282,3 @@ function Get-SafIsWindows {
     }
     return $false
 }
-
