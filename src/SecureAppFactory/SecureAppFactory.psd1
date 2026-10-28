@@ -1,5 +1,5 @@
 @{
-    ModuleVersion     = '0.1.0'
+    ModuleVersion     = '0.2.0'
     GUID              = '7b6e1c2a-4f0d-4e5a-9c31-2a6e8f0b7d14'
     Author            = 'Wasaf Abbasi'
     CompanyName       = 'Wasaf Abbasi'

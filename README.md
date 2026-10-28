@@ -182,7 +182,7 @@ Secure App Factory is a pipeline template for one reviewed installer at a time. 
 
 ## Status
 
-Version 0.1.0, early but usable. PowerShell packaging template. MIT licensed. Every push runs the test suite in GitHub Actions (`.github/workflows/package.yml`).
+Version 0.2.0, early but usable. PowerShell packaging template. MIT licensed. Every push runs the test suite in GitHub Actions (`.github/workflows/package.yml`).
 
 ## Install
 
