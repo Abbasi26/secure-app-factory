@@ -18,7 +18,10 @@
         'Get-IntuneUploadPlan',
         'Send-IntunePackage',
         'New-PackageReport',
-        'Invoke-SafPipeline'
+        'Invoke-SafPipeline',
+        'Test-SafAppCatalog',
+        'ConvertTo-SafCatalogMarkdown',
+        'New-SafAppManifest'
     )
     CmdletsToExport   = @()
     VariablesToExport = @()

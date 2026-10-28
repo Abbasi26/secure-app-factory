@@ -1,0 +1,53 @@
+name: New example app
+description: Propose an application for apps/<id>. Only installers the vendor allows redistributing.
+title: "app: "
+labels: ["new app"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste a tenant id, an internal URL, or a license key. Use the public vendor download.
+  - type: input
+    id: name
+    attributes:
+      label: Application and exact version
+      placeholder: "PuTTY 0.83 x64"
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: https download URL for that exact version
+    validations:
+      required: true
+  - type: input
+    id: hash
+    attributes:
+      label: SHA-256 the vendor publishes (link to where it is published)
+    validations:
+      required: true
+  - type: dropdown
+    id: signed
+    attributes:
+      label: Is the installer Authenticode-signed?
+      options:
+        - "Yes"
+        - "No"
+        - "I do not know"
+    validations:
+      required: true
+  - type: textarea
+    id: commands
+    attributes:
+      label: Silent install, uninstall, and a detection path
+      placeholder: |
+        install: /S
+        uninstall: {ProgramFiles}\Example\uninstall.exe /S
+        detection: {ProgramFiles}\Example\example.exe
+  - type: checkboxes
+    id: redistribution
+    attributes:
+      label: Redistribution
+      options:
+        - label: The vendor license allows downloading this installer in a build pipeline.
+          required: true
