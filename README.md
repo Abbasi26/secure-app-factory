@@ -1,5 +1,7 @@
 # Secure App Factory
 
+[![CI](https://github.com/Abbasi26/secure-app-factory/actions/workflows/package.yml/badge.svg)](https://github.com/Abbasi26/secure-app-factory/actions/workflows/package.yml)
+
 Secure App Factory is a GitHub Actions template and a PowerShell 7 module that builds a Windows package from a pinned vendor installer: it checks the SHA-256 and the Authenticode policy, wraps the file with PSAppDeployToolkit 4.1, and can produce an `.intunewin`, a CycloneDX SBOM, and a local provenance record.
 
 ## The problem
@@ -146,6 +148,22 @@ Secure App Factory is a pipeline template for one reviewed installer at a time. 
 | [PSAppDeployToolkit](https://github.com/PSAppDeployToolkit/PSAppDeployToolkit) | The deployment toolkit this template generates a v4 script for. 4.1.8 is LGPL-3.0-or-later. | The toolkit is not modified and is not stored in this repo. `-IncludeToolkit` extracts the pinned upstream template and replaces `Invoke-AppDeployToolkit.ps1` with the generated script. |
 | [Chocolatey](https://docs.chocolatey.org/en-us/community-repository/community-packages-disclaimer/) | A package manager. Chocolatey itself tells organizations not to depend on the public community repository and to internalize packages they trust. | This template does not read `.nupkg` files or the community feed. It fetches the vendor installer named in the manifest. |
 | [Patch My PC](https://patchmypc.com/) | A commercial catalog and publishing product for ConfigMgr, Intune, and WSUS, with support and broad application coverage. | Two example apps, no catalog, no SLA, and no claim to replace that product. The tradeoff is that every pin, download, and Graph call is visible in this repository. |
+
+## Status
+
+Version 0.1.0, early but usable. PowerShell packaging template. MIT licensed. Every push runs the test suite in GitHub Actions (`.github/workflows/package.yml`).
+
+## Install
+
+```sh
+git clone https://github.com/Abbasi26/secure-app-factory && cd secure-app-factory
+```
+
+## Tests
+
+```sh
+pwsh -NoProfile -File ./scripts/Invoke-Tests.ps1
+```
 
 ## License
 
