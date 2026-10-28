@@ -81,8 +81,12 @@ function Get-SafSha256 {
 
 function ConvertTo-SafHex {
     param([AllowEmptyString()][string]$Value)
+
     if ([string]::IsNullOrWhiteSpace($Value)) { return '' }
-    return (($Value -replace '[^A-Fa-f0-9]', '').ToLowerInvariant())
+    if ($Value -notmatch '\A[A-Fa-f0-9]{64}\z') {
+        throw 'SHA-256 pin must contain exactly 64 hexadecimal characters.'
+    }
+    return $Value.ToLowerInvariant()
 }
 
 function Format-SafSingleQuoted {
