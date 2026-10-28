@@ -159,7 +159,7 @@ function Test-PackageInstall {
         [switch]$SmokeTest,
         [ValidateRange(1, 2147483)][int]$TimeoutSeconds = 600,
         [int]$DetectionRetries = 10,
-        [int]$DetectionDelaySeconds = 2
+        [ValidateRange(0, 2147483647)][int]$DetectionDelaySeconds = 2
     )
 
     $installArguments = [string]$Manifest.install.arguments
