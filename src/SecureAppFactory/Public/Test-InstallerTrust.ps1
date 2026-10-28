@@ -12,8 +12,8 @@ function Test-SafSignaturePolicy {
     $reasons = New-Object System.Collections.Generic.List[string]
     $match = $true
 
-    $broken = @('HashMismatch', 'NotTrusted', 'UnknownError', 'Incompatible')
-    if ($broken -contains $status) {
+    $allowed = @('Valid', 'NotSigned', 'Unavailable')
+    if ($status -notin $allowed) {
         $match = $false
         $reasons.Add("Authenticode status is $status.")
     }
@@ -211,3 +211,4 @@ function Test-InstallerTrust {
         Reasons        = $reasons.ToArray()
     }
 }
+
