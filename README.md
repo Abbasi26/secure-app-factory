@@ -50,7 +50,7 @@ pwsh -NoLogo -File ./scripts/Invoke-Package.ps1 `
 | `-Force` | Replaces an existing destination directory. Refuses the repository root and a drive root. |
 | `-Demo` | Uses local fixtures. Cannot be combined with the switches above. |
 
-The GitHub Actions workflow `.github/workflows/package.yml` runs Pester on `ubuntu-latest`, the offline demo, and both example apps on `windows-latest` with `-IncludeToolkit`, `-DownloadContentPrepTool`, and `-SmokeTest`. Artifacts include `REPORT.md`, `trust.json`, `sbom.cdx.json`, `provenance.json`, `intune-plan.json`, the PSADT folder, and the `.intunewin`.
+The GitHub Actions workflow `.github/workflows/package.yml` runs Pester and the catalog check on `ubuntu-latest`, the offline demo, and both example apps on `windows-latest` with `-IncludeToolkit`, `-DownloadContentPrepTool`, and `-SmokeTest`. Artifacts include `REPORT.md`, `trust.json`, `sbom.cdx.json`, `provenance.json`, `intune-plan.json`, the PSADT folder, and the `.intunewin`.
 
 ### Manifest
 
@@ -88,6 +88,33 @@ detection:
 
 `lock.json` next to the manifest repeats the SHA-256. When both the manifest and the lock file have a hash, they must agree.
 
+### Check the catalog
+
+```powershell
+pwsh -NoLogo -File ./scripts/Test-Apps.ps1
+```
+
+`Test-SafAppCatalog` reads every `apps/<id>` folder and downloads nothing. It reports:
+
+| Severity | Examples |
+| --- | --- |
+| Error | YAML or schema errors, no SHA-256 pin, `trust.value` and `lock.json` disagree, a folder name `-App` cannot select |
+| Warning | the URL and file name do not contain the version, a signature rule without a leaf thumbprint, a lock recorded for another URL, a fixed drive letter in a path, two apps with the same URL |
+| Info | the hash pin is the only control (unsigned installer), an Evergreen source |
+
+The script exits 1 on an error, or on a warning with `-FailOnWarning`. `-SummaryPath $env:GITHUB_STEP_SUMMARY` appends a Markdown table; the Catalog check job in the workflow does that on every pull request.
+
+### Add an app
+
+```powershell
+New-SafAppManifest -Id example -Name "Example" -Version 1.2.3 -Publisher "Example Ltd" `
+  -Url https://downloads.example.org/example-1.2.3-x64.exe -InstallerPath ./example-1.2.3-x64.exe `
+  -InstallArguments "/S" -UninstallPath "{ProgramFiles}\Example\uninstall.exe" -UninstallArguments "/S" `
+  -DetectionPath "{ProgramFiles}\Example\example.exe"
+```
+
+It writes `apps/example/app.yaml` and a matching `lock.json`. The SHA-256 comes from `-Sha256` (the digest the vendor publishes) or from `-InstallerPath`, a file you already downloaded and reviewed. It does not download anything. Add `-SignatureSubject` and `-SignatureThumbprint` for a signed installer. The manifest is checked against the schema before it is written. Use `-WhatIf` to preview and `-Force` to replace an existing app.
+
 ### Commands
 
 | Command | Default behavior |
@@ -103,6 +130,9 @@ detection:
 | `Send-IntunePackage` | Returns `Disabled` unless `-Upload` is set. |
 | `New-PackageReport` | Writes `REPORT.md` from a pipeline result, including a failed one. |
 | `Invoke-SafPipeline` | Runs the steps above and always attempts to write the report. |
+| `Test-SafAppCatalog` | Reviews every `apps/<id>` folder offline and returns findings. |
+| `ConvertTo-SafCatalogMarkdown` | Renders those findings as a Markdown table. |
+| `New-SafAppManifest` | Writes `app.yaml` and `lock.json` for a reviewed installer. Refuses to overwrite without `-Force`. |
 
 ## Required permissions
 
@@ -128,13 +158,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Run `pwsh -NoLogo -File ./scripts/Invoke
 
 ## Roadmap
 
+[ROADMAP.md](ROADMAP.md) has the plan and good first issues.
+
 - Validate the generated PSADT script by running `-SmokeTest -SmokeTestMode Toolkit` in CI. v0.1's Windows job runs the vendor installer directly.
 - Certificate authentication for Graph, as an alternative to the client secret.
 - Update an existing Win32 app instead of creating a new one on every upload.
 - MSI product-code detection.
 - A MECM application object. v0.1 only produces a package folder you can point a MECM application at.
 - Timestamp counter-signature checks, and a check of the vendor's published checksum signature where one exists.
-- Pin the GitHub Actions used by the workflow to commit SHAs.
 
 ## How this differs from existing tools
 
@@ -173,4 +204,4 @@ PSAppDeployToolkit, when a build downloads it, remains under LGPL-3.0-or-later. 
 
 ## Kurzfassung
 
-Secure App Factory ist eine offene Vorlage, mit der ein Windows-Installationspaket für Intune nachvollziehbar gebaut wird. Version 0.1 lädt einen festgelegten Hersteller-Installer, prüft SHA-256 und optional die Authenticode-Signatur, erzeugt ein PSAppDeployToolkit-Paket und auf Wunsch eine `.intunewin`-Datei, eine CycloneDX-SBOM und lokale Herkunftsdaten. Installation, Werkzeug-Downloads und der Intune-Upload passieren nur mit einem ausdrücklichen Schalter. Der Upload legt keine Zuweisung an. Der Demo-Modus läuft offline mit lokalen Testdateien und installiert nichts.
+Secure App Factory ist eine offene Vorlage, mit der ein Windows-Installationspaket für Intune nachvollziehbar gebaut wird. Version 0.1 lädt einen festgelegten Hersteller-Installer, prüft SHA-256 und optional die Authenticode-Signatur, erzeugt ein PSAppDeployToolkit-Paket und auf Wunsch eine `.intunewin`-Datei, eine CycloneDX-SBOM und lokale Herkunftsdaten. Installation, Werkzeug-Downloads und der Intune-Upload passieren nur mit einem ausdrücklichen Schalter. Der Upload legt keine Zuweisung an. Der Demo-Modus läuft offline mit lokalen Testdateien und installiert nichts. Ab 0.2 prüft `scripts/Test-Apps.ps1` alle App-Manifeste offline (fehlende oder widersprüchliche Hash-Pins, Signaturregel ohne Thumbprint, URL ohne Version), und `New-SafAppManifest` legt ein neues, schema-geprüftes Manifest samt `lock.json` an, ohne etwas herunterzuladen.
