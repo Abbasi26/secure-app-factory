@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- CI: every `pwsh` job runs PowerShell 7.6 LTS (7.6.9, SHA-256 pinned, version asserted) through `.github/actions/install-pwsh-7-6` instead of the runner's preinstalled pwsh. PowerShell 7.4 and 7.5 reach end of support on 10 Nov 2026 ([support lifecycle](https://learn.microsoft.com/en-us/powershell/scripting/install/powershell-support-lifecycle)). The module still requires PowerShell 7.0 or later; Windows PowerShell 5.1 is not a target, so there is no 5.1 job.
+
 ## 0.2.0 - 2026-10-28
 
 - `Test-SafAppCatalog` reviews every `apps/<id>` folder offline: schema and YAML errors, a missing SHA-256 pin, a manifest and lock that disagree, a lock recorded for a different URL, a URL and file name that do not contain the version, a signature rule without a leaf thumbprint, uninstall or detection paths with a fixed drive letter, duplicate URLs, and folder names `-App` cannot select. Severity is Error, Warning, or Info. `ConvertTo-SafCatalogMarkdown` renders the findings.

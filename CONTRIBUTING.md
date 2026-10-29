@@ -4,7 +4,7 @@ Secure App Factory is a small packaging pipeline. Changes should stay auditable:
 
 ## Setup
 
-- PowerShell 7 (`pwsh`). Windows PowerShell 5.1 is not a target.
+- PowerShell 7 (`pwsh`). CI runs PowerShell 7.6 LTS. Windows PowerShell 5.1 is not a target.
 - Pester 5 for tests: `Install-Module Pester -MinimumVersion 5.0 -Scope CurrentUser`
 - No Azure tenant, no Intune app registration, and no network access are required to run the tests or the demo.
 
