@@ -1,0 +1,70 @@
+# Installs the pinned PowerShell 7.6 LTS release and puts it first on PATH,
+# so every later `shell: pwsh` step in the job runs 7.6 instead of the
+# runner's preinstalled pwsh.
+#
+# PowerShell 7.4 (LTS) and 7.5 reach end of support on 10-Nov-2026.
+# PowerShell 7.6 (LTS) is supported until 14-Nov-2028.
+# https://learn.microsoft.com/en-us/powershell/scripting/install/powershell-support-lifecycle
+#
+# The SHA-256 values come from hashes.sha256 of the v7.6.9 GitHub release:
+# https://github.com/PowerShell/PowerShell/releases/tag/v7.6.9
+name: Install PowerShell 7.6 LTS
+description: Download the pinned PowerShell 7.6 release, verify its SHA-256, and put it first on PATH.
+inputs:
+  version:
+    description: PowerShell release to install.
+    default: '7.6.9'
+  sha256-linux:
+    description: SHA-256 of powershell-<version>-linux-x64.tar.gz.
+    default: '1da6d6d6035d651f20e70ddee7c4c15ac6ab8b9fb40ee92240d91263f28a884b'
+  sha256-windows:
+    description: SHA-256 of PowerShell-<version>-win-x64.zip.
+    default: 'ce7484804c0f0ad4dda10c958e71acdaf7eebfb22505c1b480f89e0e9f1da94d'
+runs:
+  using: composite
+  steps:
+    - name: Install PowerShell ${{ inputs.version }} (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      env:
+        PWSH_VERSION: ${{ inputs.version }}
+        PWSH_SHA256: ${{ inputs.sha256-linux }}
+      run: |
+        set -euo pipefail
+        asset="powershell-${PWSH_VERSION}-linux-x64.tar.gz"
+        archive="${RUNNER_TEMP}/${asset}"
+        curl -fsSL --retry 3 -o "${archive}" "https://github.com/PowerShell/PowerShell/releases/download/v${PWSH_VERSION}/${asset}"
+        echo "${PWSH_SHA256}  ${archive}" | sha256sum -c -
+        dest="${RUNNER_TEMP}/pwsh-${PWSH_VERSION}"
+        mkdir -p "${dest}"
+        tar -xzf "${archive}" -C "${dest}"
+        chmod +x "${dest}/pwsh"
+        echo "${dest}" >> "${GITHUB_PATH}"
+
+    - name: Install PowerShell ${{ inputs.version }} (Windows)
+      if: runner.os == 'Windows'
+      shell: powershell
+      env:
+        PWSH_VERSION: ${{ inputs.version }}
+        PWSH_SHA256: ${{ inputs.sha256-windows }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $ProgressPreference = 'SilentlyContinue'
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $asset = "PowerShell-$env:PWSH_VERSION-win-x64.zip"
+        $archive = Join-Path $env:RUNNER_TEMP $asset
+        Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/PowerShell/PowerShell/releases/download/v$env:PWSH_VERSION/$asset" -OutFile $archive
+        $actual = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash
+        if ($actual -ne $env:PWSH_SHA256) { throw "SHA-256 mismatch for ${asset}: expected $env:PWSH_SHA256, got $actual" }
+        $dest = Join-Path $env:RUNNER_TEMP "pwsh-$env:PWSH_VERSION"
+        Expand-Archive -LiteralPath $archive -DestinationPath $dest -Force
+        [System.IO.File]::AppendAllText($env:GITHUB_PATH, $dest + "`n")
+
+    - name: Assert pwsh is ${{ inputs.version }}
+      shell: pwsh
+      env:
+        PWSH_VERSION: ${{ inputs.version }}
+      run: |
+        $actual = $PSVersionTable.PSVersion.ToString()
+        Write-Host "pwsh $actual at $((Get-Process -Id $PID).Path)"
+        if ($actual -ne $env:PWSH_VERSION) { throw "Expected pwsh $env:PWSH_VERSION, got $actual" }
