@@ -4,6 +4,14 @@
 
 Secure App Factory is a GitHub Actions template and a PowerShell 7 module that builds a Windows package from a pinned vendor installer: it checks the SHA-256 and the Authenticode policy, wraps the file with PSAppDeployToolkit 4.1, and can produce an `.intunewin`, a CycloneDX SBOM, and a local provenance record.
 
+## Demo video
+
+[![Demo video for secure-app-factory](docs/media/brag.jpg)](docs/media/brag.mp4)
+
+Secure App Factory turns a pinned installer manifest into an inspectable packaging run: SHA-256 and Authenticode policy in; REPORT.md, CycloneDX SBOM, provenance, and optional .intunewin output out. Offline demo: `pwsh -NoLogo -File ./demo/Invoke-Demo.ps1`. (Click the image to play the video.)
+
+Music: Sascha Ende ([ende.app](https://ende.app)), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
 ## The problem
 
 A packaging script that downloads "the latest 7-Zip" will wrap a different file the next time the vendor ships a release. The official 7-Zip 26.04 x64 executable is not Authenticode-signed, so a signature check alone cannot tell a reviewed build from a swapped one. The control that still works is a SHA-256 pin. `apps/7zip/app.yaml` pins `7z2604-x64.exe` to `d54bf805f9f3704d1e8db2fa3498ae7ef2df0312b40b558e7c71c734430a665d`, the digest GitHub publishes for that release asset. The build stops when the downloaded bytes do not match.
