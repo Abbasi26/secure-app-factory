@@ -91,12 +91,22 @@ function Test-SafAppCatalog {
         $url = [string](Get-SafProp -Object $manifest -Name @('source', 'url'))
         $fileName = [string](Get-SafProp -Object $manifest -Name @('source', 'fileName'))
         $version = [string](Get-SafProp -Object $manifest -Name @('version'))
+        $architecture = [string](Get-SafProp -Object $manifest -Name @('architecture'))
 
         if ($sourceType -eq 'url') {
             $compact = $version -replace '[^A-Za-z0-9]', ''
             $haystack = "$url $fileName"
             if (-not ($haystack.Contains($version) -or ($compact -and $haystack.Contains($compact)))) {
                 New-SafCatalogFinding -App $id -Severity 'Warning' -Check 'version' -Message "Neither source.url nor source.fileName contains version '$version'. A URL without a version can serve a different build later; the hash pin will then fail the build."
+            }
+            $archMismatch = $false
+            switch ($architecture) {
+                'x64'   { if ($fileName -match 'x86|win32|arm64') { $archMismatch = $true } }
+                'x86'   { if ($fileName -match 'x64|arm64')     { $archMismatch = $true } }
+                'arm64' { if ($fileName -match 'x86|x64')       { $archMismatch = $true } }
+            }
+            if ($archMismatch) {
+                New-SafCatalogFinding -App $id -Severity 'Warning' -Check 'architecture' -Message "manifest.architecture is '$architecture' but source.fileName suggests a different architecture. The hash pin only fails later, on a real device."
             }
             if ($null -ne $lock) {
                 $lockSource = [string](Get-SafProp -Object $lock -Name @('source'))

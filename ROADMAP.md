@@ -23,7 +23,7 @@ Secure App Factory builds one reviewed installer at a time. It stays a template,
 1. **A third example app** with a vendor-published SHA-256 and a redistributable installer. Use `New-SafAppManifest`, then `scripts/Test-Apps.ps1`. Use the "New example app" issue form first.
 2. **`-FailOnWarning` in CI** once the warnings are understood: add a workflow input or a repository variable.
 3. **JSON output** for `scripts/Test-Apps.ps1` (`-JsonPath`) so other tools can read the findings.
-4. **Catalog check: architecture hint**. Warn when `architecture: x64` but the file name contains `x86`, `win32`, or `arm64`.
+4. ~~**Catalog check: architecture hint**. Warn when `architecture: x64` but the file name contains `x86`, `win32`, or `arm64`.~~ Done in 0.2.1.
 5. **Docs**: a short walkthrough from "vendor publishes 1.2.4" to a reviewed pull request that updates both the manifest and `lock.json`.
 6. **Report**: list the catalog findings for the built app at the top of `REPORT.md`.
 
