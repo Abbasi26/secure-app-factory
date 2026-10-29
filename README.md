@@ -99,7 +99,7 @@ pwsh -NoLogo -File ./scripts/Test-Apps.ps1
 | Severity | Examples |
 | --- | --- |
 | Error | YAML or schema errors, no SHA-256 pin, `trust.value` and `lock.json` disagree, a folder name `-App` cannot select |
-| Warning | the URL and file name do not contain the version, a signature rule without a leaf thumbprint, a lock recorded for another URL, a fixed drive letter in a path, two apps with the same URL |
+| Warning | the URL and file name do not contain the version, `architecture` and the file name disagree (x64 with x86/win32/arm64), a signature rule without a leaf thumbprint, a lock recorded for another URL, a fixed drive letter in a path, two apps with the same URL |
 | Info | the hash pin is the only control (unsigned installer), an Evergreen source |
 
 The script exits 1 on an error, or on a warning with `-FailOnWarning`. `-SummaryPath $env:GITHUB_STEP_SUMMARY` appends a Markdown table; the Catalog check job in the workflow does that on every pull request.
