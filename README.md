@@ -1,3 +1,17 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/logo-light.svg">
+    <img src="docs/assets/logo-light.svg" alt="secure-app-factory" height="64">
+  </picture>
+</p>
+
+<p align="center">Builds a Windows package for Intune from a pinned, verified vendor installer.</p>
+
+<p align="center">
+  <img src="docs/assets/readme-hero.png" width="800" alt="Terminal output of the offline Secure App Factory demo: package report for 7-Zip 26.04 with SHA-256, manifest pin and Authenticode checks, SBOM and provenance, then an offline catalog lint with 0 errors.">
+</p>
+
 # Secure App Factory
 
 [![CI](https://github.com/Abbasi26/secure-app-factory/actions/workflows/package.yml/badge.svg)](https://github.com/Abbasi26/secure-app-factory/actions/workflows/package.yml)
