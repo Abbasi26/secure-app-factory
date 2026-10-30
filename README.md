@@ -6,7 +6,7 @@
   </picture>
 </p>
 
-<p align="center">Builds a Windows package for Intune from a pinned, verified vendor installer.</p>
+<p align="center">Packages Windows apps only when the installer matches its pinned hash.</p>
 
 <p align="center">
   <img src="docs/assets/readme-hero.png" width="800" alt="Terminal output of the offline Secure App Factory demo: package report for 7-Zip 26.04 with SHA-256, manifest pin and Authenticode checks, SBOM and provenance, then an offline catalog lint with 0 errors.">
