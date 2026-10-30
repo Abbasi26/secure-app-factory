@@ -28,6 +28,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - name: Install Pester 5 and run tests
         shell: pwsh
         run: |
@@ -45,6 +47,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - name: Check every apps/<id> offline
         shell: pwsh
         run: ./scripts/Test-Apps.ps1 -SummaryPath $env:GITHUB_STEP_SUMMARY
@@ -55,6 +59,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - name: Run the mocked pipeline
         shell: pwsh
         run: ./demo/Invoke-Demo.ps1 -Destination "${{ github.workspace }}/demo-output"
@@ -75,6 +81,8 @@ jobs:
         app: [7zip, notepadpp]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - name: Fetch, verify, wrap, package, and smoke test
         shell: pwsh
         run: |
@@ -118,6 +126,8 @@ jobs:
       SAF_INTUNE_CLIENT_SECRET: ${{ secrets.SAF_INTUNE_CLIENT_SECRET }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - name: Rebuild the verified package and upload it
         shell: pwsh
         run: |
