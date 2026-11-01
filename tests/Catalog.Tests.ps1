@@ -103,6 +103,28 @@ Describe 'Test-SafAppCatalog' {
         & pwsh -NoLogo -NoProfile -File $script -Path $root | Out-Null
         $LASTEXITCODE | Should -Be 1
     }
+
+    It 'writes the same findings to -JsonPath as Test-SafAppCatalog returns' {
+        $script = Join-Path $PSScriptRoot '../scripts/Test-Apps.ps1'
+        $root = Join-Path $TestDrive 'json'
+        New-TestApp -Root $root -Id 'good' | Out-Null
+        New-Item -ItemType Directory -Path (Join-Path $root 'bad') -Force | Out-Null
+        Set-Content -Path (Join-Path $root 'bad/app.yaml') -Value "name: x`nsurprise: true"
+        New-TestApp -Root $root -Id 'warn' -Overrides @{ Url = 'https://downloads.example.org/tool/latest/tool-x64.exe' } | Out-Null
+
+        $jsonPath = Join-Path $TestDrive 'findings.json'
+        $summaryPath = Join-Path $TestDrive 'summary.md'
+        & pwsh -NoLogo -NoProfile -File $script -Path $root -JsonPath $jsonPath -SummaryPath $summaryPath | Out-Null
+        $LASTEXITCODE | Should -Be 1
+
+        Test-Path -LiteralPath $jsonPath | Should -BeTrue
+        $data = Get-Content -Raw -LiteralPath $jsonPath | ConvertFrom-Json
+        $data | Should -Not -Be $null
+        @($data).Count | Should -Be (@(Test-SafAppCatalog -Path $root).Count)
+        ($data | Where-Object Check -eq 'schema').Count | Should -BeGreaterThan 0
+        ($data | Where-Object Check -eq 'version').Count | Should -BeGreaterThan 0
+        Get-Content -Raw -LiteralPath $summaryPath | Should -Match 'catalog check'
+    }
 }
 
 Describe 'New-SafAppManifest' {
