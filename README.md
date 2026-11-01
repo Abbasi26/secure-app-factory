@@ -116,7 +116,7 @@ pwsh -NoLogo -File ./scripts/Test-Apps.ps1
 | Warning | the URL and file name do not contain the version, a signature rule without a leaf thumbprint, a lock recorded for another URL, a fixed drive letter in a path, two apps with the same URL |
 | Info | the hash pin is the only control (unsigned installer), an Evergreen source |
 
-The script exits 1 on an error, or on a warning with `-FailOnWarning`. `-SummaryPath $env:GITHUB_STEP_SUMMARY` appends a Markdown table; the Catalog check job in the workflow does that on every pull request.
+The script exits 1 on an error, or on a warning with `-FailOnWarning`. `-SummaryPath $env:GITHUB_STEP_SUMMARY` appends a Markdown table; the Catalog check job in the workflow does that on every pull request. `-JsonPath` writes the same findings as a JSON array of `{ App, Severity, Check, Message }` objects, so other tools and CI can consume them without parsing Markdown.
 
 ### Add an app
 
