@@ -28,8 +28,10 @@
     AliasesToExport   = @()
     PrivateData       = @{
         PSData = @{
-            Tags       = @('Intune', 'MECM', 'PSAppDeployToolkit', 'SBOM', 'SupplyChain')
-            LicenseUri = 'https://opensource.org/licenses/MIT'
+            Tags         = @('Intune', 'MECM', 'Win32', 'Packaging', 'PSAppDeployToolkit', 'PSADT', 'SBOM', 'CycloneDX', 'SupplyChain', 'Authenticode')
+            ProjectUri   = 'https://github.com/Abbasi26/secure-app-factory'
+            LicenseUri   = 'https://github.com/Abbasi26/secure-app-factory/blob/main/LICENSE'
+            ReleaseNotes = 'https://github.com/Abbasi26/secure-app-factory/blob/main/CHANGELOG.md'
         }
     }
 }

@@ -1,0 +1,93 @@
+name: Publish to PowerShell Gallery
+
+# Runs when a release tag (v*) is pushed, for example by publishing a GitHub release.
+# Without the repository secret PSGALLERY_API_KEY the module is still staged and
+# validated, and the publish step is skipped with a notice. Nothing is uploaded.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish to the PowerShell Gallery (otherwise stage and validate only)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: psgallery-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Stage, validate, publish
+    runs-on: ubuntu-latest
+    env:
+      MODULE_NAME: SecureAppFactory
+      PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stage module folder
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $stage = Join-Path $env:RUNNER_TEMP 'stage' $env:MODULE_NAME
+          New-Item -ItemType Directory -Path $stage -Force | Out-Null
+          $items = @('src/SecureAppFactory/SecureAppFactory.psd1', 'src/SecureAppFactory/SecureAppFactory.psm1', 'src/SecureAppFactory/Private', 'src/SecureAppFactory/Public', 'src/SecureAppFactory/data')
+          foreach ($item in $items) {
+              if (-not (Test-Path -LiteralPath $item)) { throw "Missing module file or folder: $item" }
+              Copy-Item -LiteralPath $item -Destination $stage -Recurse -Force
+          }
+          Copy-Item -LiteralPath 'LICENSE', 'README.md' -Destination $stage -Force
+          Get-ChildItem -LiteralPath $stage -Recurse -File | ForEach-Object { $_.FullName.Substring($stage.Length + 1) } | Sort-Object
+          "STAGE=$stage" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Validate manifest, tag and exports
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $manifestPath = Join-Path $env:STAGE "$env:MODULE_NAME.psd1"
+          $manifest = Test-ModuleManifest -Path $manifestPath
+          $version = $manifest.Version.ToString()
+          Write-Host "Module $env:MODULE_NAME $version"
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+              $tagVersion = $env:GITHUB_REF_NAME -replace '^v', ''
+              if ($tagVersion -ne $version) {
+                  throw "Tag $env:GITHUB_REF_NAME does not match ModuleVersion $version. Bump the manifest before tagging."
+              }
+          }
+          $data = Import-PowerShellDataFile -Path $manifestPath
+          foreach ($key in 'ProjectUri', 'LicenseUri', 'Tags') {
+              if (-not $data.PrivateData.PSData[$key]) { throw "PSData.$key is missing" }
+          }
+          Import-Module $manifestPath -Force
+          $exported = @((Get-Module $env:MODULE_NAME).ExportedFunctions.Keys)
+          $missing = @($data.FunctionsToExport | Where-Object { $_ -notin $exported })
+          if ($missing.Count) { throw "Not exported: $($missing -join ', ')" }
+          Write-Host "Exports: $($exported -join ', ')"
+
+      - name: Publish
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ([string]::IsNullOrEmpty($env:PSGALLERY_API_KEY)) {
+              Write-Host '::notice::PSGALLERY_API_KEY is not set. Staged and validated only; nothing was published.'
+              exit 0
+          }
+          if ($env:GITHUB_EVENT_NAME -eq 'workflow_dispatch' -and '${{ inputs.publish }}' -ne 'true') {
+              Write-Host '::notice::Manual run without publish. Staged and validated only.'
+              exit 0
+          }
+          $name = $env:MODULE_NAME
+          $version = (Import-PowerShellDataFile -Path (Join-Path $env:STAGE "$name.psd1")).ModuleVersion
+          $existing = Find-PSResource -Name $name -Version $version -Repository PSGallery -ErrorAction SilentlyContinue
+          if ($existing) {
+              Write-Host "::notice::$name $version is already on the PowerShell Gallery. Nothing to do."
+              exit 0
+          }
+          Publish-PSResource -Path $env:STAGE -Repository PSGallery -ApiKey $env:PSGALLERY_API_KEY
+          Write-Host "Published ${name} ${version}: https://www.powershellgallery.com/packages/$name/$version"
