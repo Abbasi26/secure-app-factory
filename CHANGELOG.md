@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `Invoke-SafPipeline` runs `Test-SafAppCatalog` for the built app and writes its findings (severity and message) at the top of `REPORT.md`. If there are no findings, it writes "No catalog findings". The catalog check never fails the build; it only reports.
+
 ## 0.2.0 - 2026-10-28
 
 - `Test-SafAppCatalog` reviews every `apps/<id>` folder offline: schema and YAML errors, a missing SHA-256 pin, a manifest and lock that disagree, a lock recorded for a different URL, a URL and file name that do not contain the version, a signature rule without a leaf thumbprint, uninstall or detection paths with a fixed drive letter, duplicate URLs, and folder names `-App` cannot select. Severity is Error, Warning, or Info. `ConvertTo-SafCatalogMarkdown` renders the findings.
