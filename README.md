@@ -118,6 +118,8 @@ pwsh -NoLogo -File ./scripts/Test-Apps.ps1
 
 The script exits 1 on an error, or on a warning with `-FailOnWarning`. `-SummaryPath $env:GITHUB_STEP_SUMMARY` appends a Markdown table; the Catalog check job in the workflow does that on every pull request.
 
+`Invoke-SafPipeline` runs the catalog check for the built app and includes its findings at the top of `REPORT.md` (severity and message; "No catalog findings" when none). The catalog check never fails the build; it only reports.
+
 ### Add an app
 
 ```powershell
