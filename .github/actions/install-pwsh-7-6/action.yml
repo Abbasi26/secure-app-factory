@@ -35,11 +35,15 @@ runs:
         archive="${RUNNER_TEMP}/${asset}"
         curl -fsSL --retry 3 -o "${archive}" "https://github.com/PowerShell/PowerShell/releases/download/v${PWSH_VERSION}/${asset}"
         echo "${PWSH_SHA256}  ${archive}" | sha256sum -c -
-        dest="${RUNNER_TEMP}/pwsh-${PWSH_VERSION}"
+        dest="${RUNNER_TEMP}/pwsh"
         mkdir -p "${dest}"
         tar -xzf "${archive}" -C "${dest}"
         chmod +x "${dest}/pwsh"
-        echo "${dest}" >> "${GITHUB_PATH}"
+
+    - name: Prepend the installed pwsh to PATH (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: echo "${RUNNER_TEMP}/pwsh" >> "${GITHUB_PATH}" # zizmor: ignore[github-env]
 
     - name: Install PowerShell ${{ inputs.version }} (Windows)
       if: runner.os == 'Windows'
@@ -56,9 +60,15 @@ runs:
         Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/PowerShell/PowerShell/releases/download/v$env:PWSH_VERSION/$asset" -OutFile $archive
         $actual = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash
         if ($actual -ne $env:PWSH_SHA256) { throw "SHA-256 mismatch for ${asset}: expected $env:PWSH_SHA256, got $actual" }
-        $dest = Join-Path $env:RUNNER_TEMP "pwsh-$env:PWSH_VERSION"
+        $dest = Join-Path $env:RUNNER_TEMP "pwsh"
         Expand-Archive -LiteralPath $archive -DestinationPath $dest -Force
-        [System.IO.File]::AppendAllText($env:GITHUB_PATH, $dest + "`n")
+
+    - name: Prepend the installed pwsh to PATH (Windows)
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        $ErrorActionPreference = 'Stop'
+        [System.IO.File]::AppendAllText($env:GITHUB_PATH, (Join-Path $env:RUNNER_TEMP "pwsh") + "`n")
 
     - name: Assert pwsh is ${{ inputs.version }}
       shell: pwsh
