@@ -79,7 +79,9 @@ Describe 'Test-SafAppCatalog' {
     It 'rejects a folder name the packaging script cannot select' {
         $root = Join-Path $TestDrive 'ids'
         New-TestApp -Root $root -Id 'tool' | Out-Null
-        Rename-Item (Join-Path $root 'tool') 'Tool'
+        # Windows PowerShell 5.1 cannot Rename-Item to a case-only change on NTFS.
+        Rename-Item -LiteralPath (Join-Path $root 'tool') -NewName 'tool-tmp-case'
+        Rename-Item -LiteralPath (Join-Path $root 'tool-tmp-case') -NewName 'Tool'
         @(Test-SafAppCatalog -Path $root | Where-Object Check -eq 'id').Count | Should -Be 1
     }
 
