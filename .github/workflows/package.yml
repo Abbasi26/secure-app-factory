@@ -41,6 +41,24 @@ jobs:
           }
           ./scripts/Invoke-Tests.ps1
 
+  test-windows-powershell:
+    name: Pester (windows powershell 5.1)
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Install Pester 5 and run tests
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          $installed = Get-Module -ListAvailable -Name Pester | Where-Object { $_.Version -ge [version]'5.0.0' } | Select-Object -First 1
+          if (-not $installed) {
+            Install-Module -Name Pester -MinimumVersion 5.0.0 -Scope CurrentUser -Force -SkipPublisherCheck
+          }
+          ./scripts/Invoke-Tests.ps1
+
   catalog:
     name: Catalog check
     runs-on: ubuntu-latest
