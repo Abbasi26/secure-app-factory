@@ -5,7 +5,7 @@
     CompanyName       = 'Wasaf Abbasi'
     Copyright         = '(c) Wasaf Abbasi. Licensed under the MIT License.'
     Description       = 'Build Windows packages for Intune and MECM with hash pinning, Authenticode checks, PSAppDeployToolkit, an .intunewin, a CycloneDX SBOM, and local provenance.'
-    PowerShellVersion = '7.0'
+    PowerShellVersion = '5.1'
     RootModule        = 'SecureAppFactory.psm1'
     FunctionsToExport = @(
         'Get-SourceInstaller',
