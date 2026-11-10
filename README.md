@@ -15,6 +15,7 @@
 # Secure App Factory
 
 [![CI](https://github.com/Abbasi26/secure-app-factory/actions/workflows/package.yml/badge.svg)](https://github.com/Abbasi26/secure-app-factory/actions/workflows/package.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Secure App Factory is a GitHub Actions template and a PowerShell 7 module that builds a Windows package from a pinned vendor installer: it checks the SHA-256 and the Authenticode policy, wraps the file with PSAppDeployToolkit 4.1, and can produce an `.intunewin`, a CycloneDX SBOM, and a local provenance record.
 
