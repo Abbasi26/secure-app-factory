@@ -49,6 +49,8 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+      - name: Install PowerShell 7.6 LTS
+        uses: $/.github/actions/install-pwsh
       - name: Analyze (errors fail the job)
         shell: pwsh
         run: |
