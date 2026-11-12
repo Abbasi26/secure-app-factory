@@ -27,7 +27,7 @@ Notepad++ 8.9.8.1 x64 is signed. A signature that is merely "valid" is not enoug
 
 ## Quickstart
 
-The demo uses the fixtures in `demo/fixtures`. It does not download, install, or call Intune. PowerShell 7 is the only requirement.
+The demo uses the fixtures in `demo/fixtures`. It does not download, install, or call Intune. PowerShell 7.6 (LTS) or 7.7 is the only requirement.
 
 ```powershell
 pwsh -NoLogo -File ./demo/Invoke-Demo.ps1
@@ -210,6 +210,8 @@ git clone https://github.com/Abbasi26/secure-app-factory && cd secure-app-factor
 ```sh
 pwsh -NoProfile -File ./scripts/Invoke-Tests.ps1
 ```
+
+CI runs the suite on PowerShell 7.6 LTS and 7.7 (Linux and Windows) and on Windows PowerShell 5.1. PowerShell 7.4 and 7.5 reached end of support on 10 Nov 2026 and are no longer tested.
 
 ## License
 

@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- CI: every `pwsh` job runs PowerShell 7.6 LTS (7.6.9, SHA-256 pinned, version asserted) through `.github/actions/install-pwsh-7-6` instead of the runner's preinstalled pwsh. PowerShell 7.4 and 7.5 reach end of support on 10 Nov 2026 ([support lifecycle](https://learn.microsoft.com/en-us/powershell/scripting/install/powershell-support-lifecycle)). A separate Pester job runs on `windows-latest` with `shell: powershell` so Windows PowerShell 5.1 is required and must stay green. The module's `PowerShellVersion` is 5.1. Packaging scripts (`Invoke-Package.ps1`, `Invoke-Demo.ps1`, `Test-Apps.ps1`) still require PowerShell 7.
+- CI: Pester runs on PowerShell 7.6 LTS (7.6.10) and PowerShell 7.7 (7.7.0) on Linux and Windows; every other `pwsh` job (catalog, demo, packaging, PSScriptAnalyzer) runs 7.6 LTS. Both releases are SHA-256 pinned and version asserted through `.github/actions/install-pwsh` instead of the runner's preinstalled pwsh. Supported: Windows PowerShell 5.1 (module), PowerShell 7.6 (LTS), PowerShell 7.7. PowerShell 7.4 and 7.5 reached end of support on 10 Nov 2026 and are no longer tested ([support lifecycle](https://learn.microsoft.com/en-us/powershell/scripting/install/powershell-support-lifecycle)). A separate Pester job runs on `windows-latest` with `shell: powershell` so Windows PowerShell 5.1 is required and must stay green. The module's `PowerShellVersion` is 5.1. Packaging scripts (`Invoke-Package.ps1`, `Invoke-Demo.ps1`, `Test-Apps.ps1`) still require PowerShell 7.
 
 ## 0.2.0 - 2026-10-28
 
