@@ -55,7 +55,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install PowerShell ${{ matrix.pwsh }}
-        uses: ./.github/actions/install-pwsh
+        uses: $/.github/actions/install-pwsh
         with:
           version: ${{ matrix.pwsh }}
           sha256-linux: ${{ matrix.sha256-linux }}
@@ -100,7 +100,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install PowerShell 7.6 LTS
-        uses: ./.github/actions/install-pwsh
+        uses: $/.github/actions/install-pwsh
       - name: Check every apps/<id> offline
         shell: pwsh
         run: ./scripts/Test-Apps.ps1 -SummaryPath $env:GITHUB_STEP_SUMMARY
@@ -114,7 +114,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install PowerShell 7.6 LTS
-        uses: ./.github/actions/install-pwsh
+        uses: $/.github/actions/install-pwsh
       - name: Run the mocked pipeline
         shell: pwsh
         run: ./demo/Invoke-Demo.ps1 -Destination "${{ github.workspace }}/demo-output"
@@ -138,7 +138,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install PowerShell 7.6 LTS
-        uses: ./.github/actions/install-pwsh
+        uses: $/.github/actions/install-pwsh
       - name: Fetch, verify, wrap, package, and smoke test
         shell: pwsh
         run: |
@@ -185,7 +185,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install PowerShell 7.6 LTS
-        uses: ./.github/actions/install-pwsh
+        uses: $/.github/actions/install-pwsh
       - name: Rebuild the verified package and upload it
         shell: pwsh
         run: |

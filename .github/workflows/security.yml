@@ -50,7 +50,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install PowerShell 7.6 LTS
-        uses: ./.github/actions/install-pwsh
+        uses: $/.github/actions/install-pwsh
       - name: Analyze (errors fail the job)
         shell: pwsh
         run: |
