@@ -25,7 +25,7 @@ pwsh -NoLogo -File ./demo/Invoke-Demo.ps1
 
 ## Adding an application
 
-The short path, after you downloaded and reviewed the installer yourself:
+The short path, after you downloaded and reviewed the installer yourself. To update an existing app when the vendor publishes a new release, see [Updating an app version and hash pins](docs/updating-an-app.md).
 
 ```powershell
 Import-Module ./src/SecureAppFactory/SecureAppFactory.psd1 -Force
