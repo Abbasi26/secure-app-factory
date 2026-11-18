@@ -21,7 +21,8 @@
         'Invoke-SafPipeline',
         'Test-SafAppCatalog',
         'ConvertTo-SafCatalogMarkdown',
-        'New-SafAppManifest'
+        'New-SafAppManifest',
+        'Test-PythonStartupHook'
     )
     CmdletsToExport   = @()
     VariablesToExport = @()
