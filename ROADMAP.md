@@ -24,7 +24,7 @@ Secure App Factory builds one reviewed installer at a time. It stays a template,
 2. **`-FailOnWarning` in CI** once the warnings are understood: add a workflow input or a repository variable.
 3. ~~**JSON output** for `scripts/Test-Apps.ps1` (`-JsonPath`) so other tools can read the findings.~~ Done: `-JsonPath` writes the findings as a JSON array.
 4. ~~**Catalog check: architecture hint**. Warn when `architecture: x64` but the file name contains `x86`, `win32`, or `arm64`.~~ Done in 0.2.1.
-5. **Docs**: a short walkthrough from "vendor publishes 1.2.4" to a reviewed pull request that updates both the manifest and `lock.json`.
+5. **Docs** (done): a short walkthrough from "vendor publishes 1.2.4" to a reviewed pull request that updates both the manifest and `lock.json`. See [`docs/updating-an-app.md`](docs/updating-an-app.md).
 6. **Report**: list the catalog findings for the built app at the top of `REPORT.md`.
 
 Out of scope: an app catalog with automatic upgrades, assignment to groups, and running anything on endpoints.

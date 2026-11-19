@@ -148,6 +148,8 @@ New-SafAppManifest -Id example -Name "Example" -Version 1.2.3 -Publisher "Exampl
 
 It writes `apps/example/app.yaml` and a matching `lock.json`. The SHA-256 comes from `-Sha256` (the digest the vendor publishes) or from `-InstallerPath`, a file you already downloaded and reviewed. It does not download anything. Add `-SignatureSubject` and `-SignatureThumbprint` for a signed installer. The manifest is checked against the schema before it is written. Use `-WhatIf` to preview and `-Force` to replace an existing app.
 
+For updating an existing app when the vendor publishes a new release, see [Updating an app version and hash pins](docs/updating-an-app.md).
+
 ### Commands
 
 | Command | Default behavior |
