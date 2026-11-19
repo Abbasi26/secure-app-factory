@@ -172,7 +172,7 @@ function ConvertTo-SafCatalogMarkdown {
             $lines.Add('| App | Severity | Check | Message |')
             $lines.Add('| --- | --- | --- | --- |')
             foreach ($item in $all) {
-                $message = ([string]$item.Message).Replace('|', '\|')
+                $message = ([string]$item.Message).Replace("`r`n", '<br>').Replace("`n", '<br>').Replace('|', '\|')
                 $lines.Add(("| {0} | {1} | {2} | {3} |" -f $item.App, $item.Severity, $item.Check, $message))
             }
         }

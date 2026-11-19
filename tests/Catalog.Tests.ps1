@@ -101,6 +101,21 @@ Describe 'Test-SafAppCatalog' {
         $md | Should -Match 'x \\\| y'
     }
 
+    It 'renders multiline Markdown findings as one table row each' {
+        $findings = @(
+            [pscustomobject]@{ App = 'lf'; Severity = 'Error'; Check = 'pin'; Message = "first | value`nsecond | value" }
+            [pscustomobject]@{ App = 'crlf'; Severity = 'Warning'; Check = 'schema'; Message = "third | value`r`nfourth | value" }
+        )
+
+        $md = $findings | ConvertTo-SafCatalogMarkdown
+        $lines = $md -split "`n"
+
+        $lines.Count | Should -Be 8
+        $lines[6] | Should -Be '| lf | Error | pin | first \| value<br>second \| value |'
+        $lines[7] | Should -Be '| crlf | Warning | schema | third \| value<br>fourth \| value |'
+        $md.Contains("`r") | Should -BeFalse
+    }
+
     It 'scripts/Test-Apps.ps1 exits 0 for the shipped apps and 1 for a broken catalog' {
         $script = Join-Path $PSScriptRoot '../scripts/Test-Apps.ps1'
         $summary = Join-Path $TestDrive 'summary.md'
