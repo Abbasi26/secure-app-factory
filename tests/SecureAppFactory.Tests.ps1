@@ -410,7 +410,7 @@ Describe 'Intune upload gate' {
 
 Describe 'Repository hygiene' {
     It 'keeps PowerShell files ASCII' {
-        $files = Get-ChildItem -LiteralPath (Join-Path $script:RepoRoot 'src') -Recurse -Include '*.ps1', '*.psm1', '*.psd1'
+        $files = Get-ChildItem -LiteralPath (Join-Path $script:RepoRoot 'src') -Recurse -File | Where-Object { $_.Extension -in '.ps1', '.psm1', '.psd1' }
         foreach ($file in $files) {
             $bytes = [System.IO.File]::ReadAllBytes($file.FullName)
             $high = @($bytes | Where-Object { $_ -gt 127 })

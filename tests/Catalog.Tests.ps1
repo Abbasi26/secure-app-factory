@@ -76,10 +76,21 @@ Describe 'Test-SafAppCatalog' {
         ($warnings | Where-Object App -eq 'two').Check | Sort-Object | Should -Be @('duplicate', 'version')
     }
 
+    It 'warns when the architecture and the file name disagree' {
+        $root = Join-Path $TestDrive 'arch'
+        New-TestApp -Root $root -Id 'x64' -Overrides @{ Url = 'https://downloads.example.org/tool-1.2.3-x86.exe' } | Out-Null
+        New-TestApp -Root $root -Id 'ok'  -Overrides @{ Url = 'https://downloads.example.org/tool-1.2.3-x64.exe' } | Out-Null
+        $warnings = @(Test-SafAppCatalog -Path $root | Where-Object Severity -eq 'Warning')
+        ($warnings | Where-Object App -eq 'x64').Check | Should -Contain 'architecture'
+        ($warnings | Where-Object App -eq 'ok').Check | Should -Not -Contain 'architecture'
+    }
+
     It 'rejects a folder name the packaging script cannot select' {
         $root = Join-Path $TestDrive 'ids'
         New-TestApp -Root $root -Id 'tool' | Out-Null
-        Rename-Item (Join-Path $root 'tool') 'Tool'
+        # Windows PowerShell 5.1 cannot Rename-Item to a case-only change on NTFS.
+        Rename-Item -LiteralPath (Join-Path $root 'tool') -NewName 'tool-tmp-case'
+        Rename-Item -LiteralPath (Join-Path $root 'tool-tmp-case') -NewName 'Tool'
         @(Test-SafAppCatalog -Path $root | Where-Object Check -eq 'id').Count | Should -Be 1
     }
 
@@ -88,6 +99,21 @@ Describe 'Test-SafAppCatalog' {
         $md = $finding | ConvertTo-SafCatalogMarkdown -Apps @('a', 'b')
         $md | Should -Match '2 apps, 1 errors, 0 warnings'
         $md | Should -Match 'x \\\| y'
+    }
+
+    It 'renders multiline Markdown findings as one table row each' {
+        $findings = @(
+            [pscustomobject]@{ App = 'lf'; Severity = 'Error'; Check = 'pin'; Message = "first | value`nsecond | value" }
+            [pscustomobject]@{ App = 'crlf'; Severity = 'Warning'; Check = 'schema'; Message = "third | value`r`nfourth | value" }
+        )
+
+        $md = $findings | ConvertTo-SafCatalogMarkdown
+        $lines = $md -split "`n"
+
+        $lines.Count | Should -Be 8
+        $lines[6] | Should -Be '| lf | Error | pin | first \| value<br>second \| value |'
+        $lines[7] | Should -Be '| crlf | Warning | schema | third \| value<br>fourth \| value |'
+        $md.Contains("`r") | Should -BeFalse
     }
 
     It 'scripts/Test-Apps.ps1 exits 0 for the shipped apps and 1 for a broken catalog' {
