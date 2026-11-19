@@ -76,6 +76,15 @@ Describe 'Test-SafAppCatalog' {
         ($warnings | Where-Object App -eq 'two').Check | Sort-Object | Should -Be @('duplicate', 'version')
     }
 
+    It 'warns when the architecture and the file name disagree' {
+        $root = Join-Path $TestDrive 'arch'
+        New-TestApp -Root $root -Id 'x64' -Overrides @{ Url = 'https://downloads.example.org/tool-1.2.3-x86.exe' } | Out-Null
+        New-TestApp -Root $root -Id 'ok'  -Overrides @{ Url = 'https://downloads.example.org/tool-1.2.3-x64.exe' } | Out-Null
+        $warnings = @(Test-SafAppCatalog -Path $root | Where-Object Severity -eq 'Warning')
+        ($warnings | Where-Object App -eq 'x64').Check | Should -Contain 'architecture'
+        ($warnings | Where-Object App -eq 'ok').Check | Should -Not -Contain 'architecture'
+    }
+
     It 'rejects a folder name the packaging script cannot select' {
         $root = Join-Path $TestDrive 'ids'
         New-TestApp -Root $root -Id 'tool' | Out-Null
