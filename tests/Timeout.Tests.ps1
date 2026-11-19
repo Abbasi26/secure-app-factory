@@ -43,6 +43,3 @@ Describe 'Smoke-test timeout validation' {
         $result.Executed | Should -BeFalse
     }
 }
-
-# Skipped: repository edits, test execution, and unrelated smoke-test changes.
-# Risk: callers passing zero, negative, or overflowing timeouts now fail immediately.

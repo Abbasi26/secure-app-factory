@@ -4,6 +4,7 @@
 param(
     [string]$Path,
     [string]$SummaryPath,
+    [string]$JsonPath,
     [switch]$FailOnWarning
 )
 
@@ -16,6 +17,13 @@ $apps = @(Get-ChildItem -LiteralPath $Path -Directory | ForEach-Object Name)
 $findings = @(Test-SafAppCatalog -Path $Path)
 if ($findings.Count -gt 0) {
     $findings | Format-Table -AutoSize -Wrap App, Severity, Check, Message | Out-String -Width 200 | Write-Host
+}
+if ($JsonPath) {
+    $jsonDir = Split-Path -Parent $JsonPath
+    if ($jsonDir -and -not (Test-Path -LiteralPath $jsonDir -PathType Container)) {
+        New-Item -ItemType Directory -Path $jsonDir -Force | Out-Null
+    }
+    $findings | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $JsonPath -NoNewline
 }
 $markdown = $findings | ConvertTo-SafCatalogMarkdown -Apps $apps
 if ($SummaryPath) {
