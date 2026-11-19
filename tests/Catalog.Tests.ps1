@@ -147,8 +147,8 @@ Describe 'Test-SafAppCatalog' {
         $data = Get-Content -Raw -LiteralPath $jsonPath | ConvertFrom-Json
         $data | Should -Not -Be $null
         @($data).Count | Should -Be (@(Test-SafAppCatalog -Path $root).Count)
-        ($data | Where-Object Check -eq 'schema').Count | Should -BeGreaterThan 0
-        ($data | Where-Object Check -eq 'version').Count | Should -BeGreaterThan 0
+        @($data | Where-Object Check -eq 'schema').Count | Should -BeGreaterThan 0
+        @($data | Where-Object Check -eq 'version').Count | Should -BeGreaterThan 0
         Get-Content -Raw -LiteralPath $summaryPath | Should -Match 'catalog check'
     }
 }
