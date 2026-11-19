@@ -24,6 +24,3 @@ Describe 'HTTPS URL validation' {
         $actual | Should -Be $Expected
     }
 }
-
-# Skipped: repository edits and the full test suite; only representative URI parsing was checked.
-# Risk: previously accepted malformed URLs will fail earlier; redirect destinations remain unchecked.

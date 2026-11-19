@@ -114,10 +114,28 @@ pwsh -NoLogo -File ./scripts/Test-Apps.ps1
 | Severity | Examples |
 | --- | --- |
 | Error | YAML or schema errors, no SHA-256 pin, `trust.value` and `lock.json` disagree, a folder name `-App` cannot select |
-| Warning | the URL and file name do not contain the version, a signature rule without a leaf thumbprint, a lock recorded for another URL, a fixed drive letter in a path, two apps with the same URL |
+| Warning | the URL and file name do not contain the version, `architecture` and the file name disagree (x64 with x86/win32/arm64), a signature rule without a leaf thumbprint, a lock recorded for another URL, a fixed drive letter in a path, two apps with the same URL |
 | Info | the hash pin is the only control (unsigned installer), an Evergreen source |
 
-The script exits 1 on an error, or on a warning with `-FailOnWarning`. `-SummaryPath $env:GITHUB_STEP_SUMMARY` appends a Markdown table; the Catalog check job in the workflow does that on every pull request.
+The script exits 1 on an error, or on a warning with `-FailOnWarning`. `-SummaryPath $env:GITHUB_STEP_SUMMARY` appends a Markdown table; the Catalog check job in the workflow does that on every pull request. `-JsonPath` writes the same findings as a JSON array of `{ App, Severity, Check, Message }` objects, so other tools and CI can consume them without parsing Markdown.
+
+### Check Python startup hooks
+
+```powershell
+pwsh -NoLogo -File ./scripts/Test-PythonStartupHooks.ps1                 # site-packages of python3/python on PATH
+pwsh -NoLogo -File ./scripts/Test-PythonStartupHooks.ps1 -Path . -Recurse  # a source tree or package folder
+```
+
+Python runs every line of a `.pth` file in `site-packages` that starts with `import ` on each interpreter start, even when nothing imports the package. The malicious `agent-framework` 1.26.1 and 1.26.2 releases on PyPI used this to steal credentials ([OSV MAL-2026-20101](https://osv.dev/vulnerability/MAL-2026-20101)). `Test-PythonStartupHook` reads the `.pth` files as text and never runs Python code. It reports one status per file:
+
+| Status | Meaning |
+| --- | --- |
+| Malicious | a known indicator file name: `agent_framework_meta.pth` (1.26.1), `af_runtime_diag.pth` (1.26.2) |
+| Suspicious | at least one executable line that is not on the allow list |
+| Allowed | executable lines that exactly match setuptools (`distutils-precedence.pth`, `__editable__.*.pth`), virtualenv (`_virtualenv.pth`), pywin32, or a name passed to `-AllowFile` |
+| PathsOnly | only path entries and comments |
+
+The script exits 1 on Malicious or Suspicious. The Catalog check job runs it on the repository tree.
 
 ### Add an app
 
@@ -150,6 +168,7 @@ For updating an existing app when the vendor publishes a new release, see [Updat
 | `Test-SafAppCatalog` | Reviews every `apps/<id>` folder offline and returns findings. |
 | `ConvertTo-SafCatalogMarkdown` | Renders those findings as a Markdown table. |
 | `New-SafAppManifest` | Writes `app.yaml` and `lock.json` for a reviewed installer. Refuses to overwrite without `-Force`. |
+| `Test-PythonStartupHook` | Lists `.pth` files with executable lines and flags known malicious ones. Reads files only. |
 
 ## Required permissions
 
