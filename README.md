@@ -114,10 +114,10 @@ pwsh -NoLogo -File ./scripts/Test-Apps.ps1
 | Severity | Examples |
 | --- | --- |
 | Error | YAML or schema errors, no SHA-256 pin, `trust.value` and `lock.json` disagree, a folder name `-App` cannot select |
-| Warning | the URL and file name do not contain the version, a signature rule without a leaf thumbprint, a lock recorded for another URL, a fixed drive letter in a path, two apps with the same URL |
+| Warning | the URL and file name do not contain the version, `architecture` and the file name disagree (x64 with x86/win32/arm64), a signature rule without a leaf thumbprint, a lock recorded for another URL, a fixed drive letter in a path, two apps with the same URL |
 | Info | the hash pin is the only control (unsigned installer), an Evergreen source |
 
-The script exits 1 on an error, or on a warning with `-FailOnWarning`. `-SummaryPath $env:GITHUB_STEP_SUMMARY` appends a Markdown table; the Catalog check job in the workflow does that on every pull request.
+The script exits 1 on an error, or on a warning with `-FailOnWarning`. `-SummaryPath $env:GITHUB_STEP_SUMMARY` appends a Markdown table; the Catalog check job in the workflow does that on every pull request. `-JsonPath` writes the same findings as a JSON array of `{ App, Severity, Check, Message }` objects, so other tools and CI can consume them without parsing Markdown.
 
 ### Check Python startup hooks
 
@@ -147,6 +147,8 @@ New-SafAppManifest -Id example -Name "Example" -Version 1.2.3 -Publisher "Exampl
 ```
 
 It writes `apps/example/app.yaml` and a matching `lock.json`. The SHA-256 comes from `-Sha256` (the digest the vendor publishes) or from `-InstallerPath`, a file you already downloaded and reviewed. It does not download anything. Add `-SignatureSubject` and `-SignatureThumbprint` for a signed installer. The manifest is checked against the schema before it is written. Use `-WhatIf` to preview and `-Force` to replace an existing app.
+
+For updating an existing app when the vendor publishes a new release, see [Updating an app version and hash pins](docs/updating-an-app.md).
 
 ### Commands
 
