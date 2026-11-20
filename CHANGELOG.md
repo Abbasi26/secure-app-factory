@@ -3,6 +3,8 @@
 ## Unreleased
 
 - `Invoke-SafPipeline` runs `Test-SafAppCatalog` for the built app and writes its findings (severity and message) at the top of `REPORT.md`. If there are no findings, it writes "No catalog findings". The catalog check never fails the build; it only reports.
+- `Test-PythonStartupHook` and `scripts/Test-PythonStartupHooks.ps1`: list Python `.pth` files that run code at interpreter start. Known indicator names from the malicious `agent-framework` 1.26.1/1.26.2 releases (`agent_framework_meta.pth`, `af_runtime_diag.pth`, [MAL-2026-20101](https://osv.dev/vulnerability/MAL-2026-20101)) are Malicious; other executable lines are Suspicious unless they exactly match setuptools, virtualenv, editable-install or pywin32 hooks or a name passed to `-AllowFile`. Reads files only. Exit 1 on Malicious or Suspicious. The Catalog check job runs it on the repository tree. Works on Windows PowerShell 5.1.
+- CI: every `pwsh` job runs PowerShell 7.6 LTS (7.6.9, SHA-256 pinned, version asserted) through `.github/actions/install-pwsh-7-6` instead of the runner's preinstalled pwsh. PowerShell 7.4 and 7.5 reach end of support on 10 Nov 2026 ([support lifecycle](https://learn.microsoft.com/en-us/powershell/scripting/install/powershell-support-lifecycle)). A separate Pester job runs on `windows-latest` with `shell: powershell` so Windows PowerShell 5.1 is required and must stay green. The module's `PowerShellVersion` is 5.1. Packaging scripts (`Invoke-Package.ps1`, `Invoke-Demo.ps1`, `Test-Apps.ps1`) still require PowerShell 7.
 
 ## 0.2.0 - 2026-10-28
 
