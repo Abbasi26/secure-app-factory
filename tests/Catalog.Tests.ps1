@@ -130,6 +130,24 @@ Describe 'Test-SafAppCatalog' {
         $LASTEXITCODE | Should -Be 1
     }
 
+    It 'scripts/Test-Apps.ps1 exits 1 for warnings only with -FailOnWarning' {
+        $script = Join-Path $PSScriptRoot '../scripts/Test-Apps.ps1'
+        $root = Join-Path $TestDrive 'warning-exit'
+        New-TestApp -Root $root -Id 'tool' -Overrides @{
+            Url = 'https://downloads.example.test/tool/latest/tool-x64.exe'
+        } | Out-Null
+
+        $findings = @(Test-SafAppCatalog -Path $root)
+        @($findings | Where-Object Severity -eq 'Error').Count | Should -Be 0
+        @($findings | Where-Object { $_.Severity -eq 'Warning' -and $_.Check -eq 'version' }).Count | Should -Be 1
+
+        & pwsh -NoLogo -NoProfile -File $script -Path $root | Out-Null
+        $LASTEXITCODE | Should -Be 0
+
+        & pwsh -NoLogo -NoProfile -File $script -Path $root -FailOnWarning | Out-Null
+        $LASTEXITCODE | Should -Be 1
+    }
+
     It 'writes the same findings to -JsonPath as Test-SafAppCatalog returns' {
         $script = Join-Path $PSScriptRoot '../scripts/Test-Apps.ps1'
         $root = Join-Path $TestDrive 'json'
