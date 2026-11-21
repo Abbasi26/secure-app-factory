@@ -81,16 +81,27 @@ function Invoke-SafPipeline {
         Provenance    = $null
         SmokeTest     = $null
         Upload        = $null
+        CatalogCheckError = $null
         Error         = $null
     }
 
     try {
         $manifest = Read-SafManifest -Path $ManifestPath
+        $appId = Get-SafAppId -ManifestPath $ManifestPath
         $state.App = @{
-            Id        = Get-SafAppId -ManifestPath $ManifestPath
+            Id        = $appId
             Name      = [string]$manifest.name
             Version   = [string]$manifest.version
             Publisher = [string]$manifest.publisher
+        }
+
+        $appsRoot = Join-Path (Split-Path -Parent $ManifestPath) '..'
+        try {
+            $state.CatalogFindings = @(Test-SafAppCatalog -Path $appsRoot | Where-Object { $_.App -eq $appId })
+        }
+        catch {
+            Write-Warning "Catalog check skipped: $($_.Exception.Message)"
+            $state.CatalogCheckError = $_.Exception.Message
         }
         $lockPath = Join-Path (Split-Path -Parent $ManifestPath) 'lock.json'
         $fixture = $null

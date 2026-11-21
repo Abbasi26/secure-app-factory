@@ -145,6 +145,8 @@ Python runs every line of a `.pth` file in `site-packages` that starts with `imp
 
 The script exits 1 on Malicious or Suspicious. The Catalog check job runs it on the repository tree.
 
+`Invoke-SafPipeline` runs the catalog check for the built app and includes its findings at the top of `REPORT.md` (severity and message; "No catalog findings" when none). The catalog check never fails the build; it only reports.
+
 ### Add an app
 
 ```powershell
