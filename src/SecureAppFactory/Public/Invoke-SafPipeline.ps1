@@ -81,6 +81,7 @@ function Invoke-SafPipeline {
         Provenance    = $null
         SmokeTest     = $null
         Upload        = $null
+        CatalogCheckError = $null
         Error         = $null
     }
 
@@ -100,7 +101,7 @@ function Invoke-SafPipeline {
         }
         catch {
             Write-Warning "Catalog check skipped: $($_.Exception.Message)"
-            $state.CatalogFindings = @()
+            $state.CatalogCheckError = $_.Exception.Message
         }
         $lockPath = Join-Path (Split-Path -Parent $ManifestPath) 'lock.json'
         $fixture = $null

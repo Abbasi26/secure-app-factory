@@ -36,7 +36,11 @@ function New-PackageReport {
 
     $lines.Add('## Catalog findings')
     $lines.Add('')
-    if ($null -eq $catalogFindings -or $catalogFindings.Count -eq 0) {
+    $catalogCheckError = [string](Get-SafProp -Object $Result -Name @('CatalogCheckError'))
+    if ($catalogCheckError) {
+        $lines.Add('Catalog check failed. No conclusion is available. ' + (Format-SafCell $catalogCheckError))
+    }
+    elseif ($null -eq $catalogFindings -or $catalogFindings.Count -eq 0) {
         $lines.Add('No catalog findings.')
     }
     else {
