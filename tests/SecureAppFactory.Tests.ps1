@@ -315,6 +315,23 @@ Describe 'Package pipeline' {
     It 'refuses demo mode combined with an upload' {
         { Invoke-SafPipeline -ManifestPath (Join-Path $script:RepoRoot 'apps/7zip/app.yaml') -Destination (Join-Path $TestDrive 'nope') -Demo -Upload } | Should -Throw '*Demo mode*'
     }
+
+    It 'includes catalog findings for the built app at the top of REPORT.md' {
+        $root = Join-Path $TestDrive 'catalog-report'
+        $result = Invoke-SafPipeline -ManifestPath (Join-Path $script:RepoRoot 'apps/7zip/app.yaml') -Destination (Join-Path $root '7zip') -Demo
+        $report = Get-Content -Raw -LiteralPath (Join-Path $root '7zip/REPORT.md')
+        $report | Should -Match '## Catalog findings'
+        $report | Should -Match 'Info'
+        $report | Should -Match 'SHA-256 pin is the only control'
+    }
+
+    It 'shows No catalog findings when the app has no findings' {
+        $root = Join-Path $TestDrive 'no-findings'
+        $result = Invoke-SafPipeline -ManifestPath (Join-Path $script:RepoRoot 'apps/notepadpp/app.yaml') -Destination (Join-Path $root 'notepadpp') -Demo
+        $report = Get-Content -Raw -LiteralPath (Join-Path $root 'notepadpp/REPORT.md')
+        $report | Should -Match '## Catalog findings'
+        $report | Should -Match 'No catalog findings'
+    }
 }
 
 Describe 'Intune upload gate' {
