@@ -76,10 +76,21 @@ Describe 'Test-SafAppCatalog' {
         ($warnings | Where-Object App -eq 'two').Check | Sort-Object | Should -Be @('duplicate', 'version')
     }
 
+    It 'warns when the architecture and the file name disagree' {
+        $root = Join-Path $TestDrive 'arch'
+        New-TestApp -Root $root -Id 'x64' -Overrides @{ Url = 'https://downloads.example.org/tool-1.2.3-x86.exe' } | Out-Null
+        New-TestApp -Root $root -Id 'ok'  -Overrides @{ Url = 'https://downloads.example.org/tool-1.2.3-x64.exe' } | Out-Null
+        $warnings = @(Test-SafAppCatalog -Path $root | Where-Object Severity -eq 'Warning')
+        ($warnings | Where-Object App -eq 'x64').Check | Should -Contain 'architecture'
+        ($warnings | Where-Object App -eq 'ok').Check | Should -Not -Contain 'architecture'
+    }
+
     It 'rejects a folder name the packaging script cannot select' {
         $root = Join-Path $TestDrive 'ids'
         New-TestApp -Root $root -Id 'tool' | Out-Null
-        Rename-Item (Join-Path $root 'tool') 'Tool'
+        # Windows PowerShell 5.1 cannot Rename-Item to a case-only change on NTFS.
+        Rename-Item -LiteralPath (Join-Path $root 'tool') -NewName 'tool-tmp-case'
+        Rename-Item -LiteralPath (Join-Path $root 'tool-tmp-case') -NewName 'Tool'
         @(Test-SafAppCatalog -Path $root | Where-Object Check -eq 'id').Count | Should -Be 1
     }
 
@@ -88,6 +99,21 @@ Describe 'Test-SafAppCatalog' {
         $md = $finding | ConvertTo-SafCatalogMarkdown -Apps @('a', 'b')
         $md | Should -Match '2 apps, 1 errors, 0 warnings'
         $md | Should -Match 'x \\\| y'
+    }
+
+    It 'renders multiline Markdown findings as one table row each' {
+        $findings = @(
+            [pscustomobject]@{ App = 'lf'; Severity = 'Error'; Check = 'pin'; Message = "first | value`nsecond | value" }
+            [pscustomobject]@{ App = 'crlf'; Severity = 'Warning'; Check = 'schema'; Message = "third | value`r`nfourth | value" }
+        )
+
+        $md = $findings | ConvertTo-SafCatalogMarkdown
+        $lines = $md -split "`n"
+
+        $lines.Count | Should -Be 8
+        $lines[6] | Should -Be '| lf | Error | pin | first \| value<br>second \| value |'
+        $lines[7] | Should -Be '| crlf | Warning | schema | third \| value<br>fourth \| value |'
+        $md.Contains("`r") | Should -BeFalse
     }
 
     It 'scripts/Test-Apps.ps1 exits 0 for the shipped apps and 1 for a broken catalog' {
@@ -102,6 +128,46 @@ Describe 'Test-SafAppCatalog' {
         Set-Content -Path (Join-Path $root 'bad/app.yaml') -Value 'name: only'
         & pwsh -NoLogo -NoProfile -File $script -Path $root | Out-Null
         $LASTEXITCODE | Should -Be 1
+    }
+
+    It 'scripts/Test-Apps.ps1 exits 1 for warnings only with -FailOnWarning' {
+        $script = Join-Path $PSScriptRoot '../scripts/Test-Apps.ps1'
+        $root = Join-Path $TestDrive 'warning-exit'
+        New-TestApp -Root $root -Id 'tool' -Overrides @{
+            Url = 'https://downloads.example.test/tool/latest/tool-x64.exe'
+        } | Out-Null
+
+        $findings = @(Test-SafAppCatalog -Path $root)
+        @($findings | Where-Object Severity -eq 'Error').Count | Should -Be 0
+        @($findings | Where-Object { $_.Severity -eq 'Warning' -and $_.Check -eq 'version' }).Count | Should -Be 1
+
+        & pwsh -NoLogo -NoProfile -File $script -Path $root | Out-Null
+        $LASTEXITCODE | Should -Be 0
+
+        & pwsh -NoLogo -NoProfile -File $script -Path $root -FailOnWarning | Out-Null
+        $LASTEXITCODE | Should -Be 1
+    }
+
+    It 'writes the same findings to -JsonPath as Test-SafAppCatalog returns' {
+        $script = Join-Path $PSScriptRoot '../scripts/Test-Apps.ps1'
+        $root = Join-Path $TestDrive 'json'
+        New-TestApp -Root $root -Id 'good' | Out-Null
+        New-Item -ItemType Directory -Path (Join-Path $root 'bad') -Force | Out-Null
+        Set-Content -Path (Join-Path $root 'bad/app.yaml') -Value "name: x`nsurprise: true"
+        New-TestApp -Root $root -Id 'warn' -Overrides @{ Url = 'https://downloads.example.org/tool/latest/tool-x64.exe' } | Out-Null
+
+        $jsonPath = Join-Path $TestDrive 'findings.json'
+        $summaryPath = Join-Path $TestDrive 'summary.md'
+        & pwsh -NoLogo -NoProfile -File $script -Path $root -JsonPath $jsonPath -SummaryPath $summaryPath | Out-Null
+        $LASTEXITCODE | Should -Be 1
+
+        Test-Path -LiteralPath $jsonPath | Should -BeTrue
+        $data = Get-Content -Raw -LiteralPath $jsonPath | ConvertFrom-Json
+        $data | Should -Not -Be $null
+        @($data).Count | Should -Be (@(Test-SafAppCatalog -Path $root).Count)
+        @($data | Where-Object Check -eq 'schema').Count | Should -BeGreaterThan 0
+        @($data | Where-Object Check -eq 'version').Count | Should -BeGreaterThan 0
+        Get-Content -Raw -LiteralPath $summaryPath | Should -Match 'catalog check'
     }
 }
 

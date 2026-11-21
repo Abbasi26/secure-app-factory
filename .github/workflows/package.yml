@@ -28,6 +28,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install PowerShell 7.6 LTS
+        uses: $/.github/actions/install-pwsh-7-6
       - name: Install Pester 5 and run tests
         shell: pwsh
         run: |
@@ -39,15 +43,42 @@ jobs:
           }
           ./scripts/Invoke-Tests.ps1
 
+  test-windows-powershell:
+    name: Pester (windows powershell 5.1)
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install Pester 5 and run tests
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          $installed = Get-Module -ListAvailable -Name Pester | Where-Object { $_.Version -ge [version]'5.0.0' } | Select-Object -First 1
+          if (-not $installed) {
+            Install-Module -Name Pester -MinimumVersion 5.0.0 -Scope CurrentUser -Force -SkipPublisherCheck
+          }
+          ./scripts/Invoke-Tests.ps1
+
   catalog:
     name: Catalog check
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install PowerShell 7.6 LTS
+        uses: $/.github/actions/install-pwsh-7-6
       - name: Check every apps/<id> offline
         shell: pwsh
-        run: ./scripts/Test-Apps.ps1 -SummaryPath $env:GITHUB_STEP_SUMMARY
+        run: ./scripts/Test-Apps.ps1 -FailOnWarning -SummaryPath $env:GITHUB_STEP_SUMMARY
+      - name: No Python startup hooks in the repository
+        shell: pwsh
+        run: ./scripts/Test-PythonStartupHooks.ps1 -Path . -Recurse -SummaryPath $env:GITHUB_STEP_SUMMARY
 
   demo:
     name: Offline demo
@@ -55,6 +86,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install PowerShell 7.6 LTS
+        uses: $/.github/actions/install-pwsh-7-6
       - name: Run the mocked pipeline
         shell: pwsh
         run: ./demo/Invoke-Demo.ps1 -Destination "${{ github.workspace }}/demo-output"
@@ -75,6 +110,10 @@ jobs:
         app: [7zip, notepadpp]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install PowerShell 7.6 LTS
+        uses: $/.github/actions/install-pwsh-7-6
       - name: Fetch, verify, wrap, package, and smoke test
         shell: pwsh
         run: |
@@ -118,6 +157,10 @@ jobs:
       SAF_INTUNE_CLIENT_SECRET: ${{ secrets.SAF_INTUNE_CLIENT_SECRET }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install PowerShell 7.6 LTS
+        uses: $/.github/actions/install-pwsh-7-6
       - name: Rebuild the verified package and upload it
         shell: pwsh
         run: |

@@ -1,0 +1,17 @@
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.31.1
+    hooks:
+      - id: zizmor
+  - repo: local
+    hooks:
+      - id: psscriptanalyzer
+        name: PSScriptAnalyzer (errors)
+        language: system
+        entry: pwsh -NoProfile -Command "$r = @(Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error); $r | Format-Table RuleName, ScriptName, Line, Message -AutoSize | Out-String -Width 200 | Write-Host; exit [int]($r.Count -gt 0)"
+        files: \.(ps1|psm1|psd1)$
+        pass_filenames: false
