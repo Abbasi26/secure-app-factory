@@ -1,25 +1,29 @@
-# Installs the pinned PowerShell 7.6 LTS release and puts it first on PATH,
-# so every later `shell: pwsh` step in the job runs 7.6 instead of the
-# runner's preinstalled pwsh.
+# Installs a pinned PowerShell 7 release, verifies its SHA-256, and puts it
+# first on PATH, so every later `shell: pwsh` step in the job runs that
+# version instead of the runner's preinstalled pwsh.
 #
-# PowerShell 7.4 (LTS) and 7.5 reach end of support on 10-Nov-2026.
-# PowerShell 7.6 (LTS) is supported until 14-Nov-2028.
+# Supported in CI: PowerShell 7.6 (LTS, default) and PowerShell 7.7.
+# PowerShell 7.4 (LTS) and 7.5 reached end of support on 10-Nov-2026.
 # https://learn.microsoft.com/en-us/powershell/scripting/install/powershell-support-lifecycle
 #
-# The SHA-256 values come from hashes.sha256 of the v7.6.9 GitHub release:
-# https://github.com/PowerShell/PowerShell/releases/tag/v7.6.9
-name: Install PowerShell 7.6 LTS
-description: Download the pinned PowerShell 7.6 release, verify its SHA-256, and put it first on PATH.
+# The default SHA-256 values come from hashes.sha256 of the v7.6.10 release:
+# https://github.com/PowerShell/PowerShell/releases/tag/v7.6.10
+# PowerShell 7.7.0 (pass as inputs), from hashes.sha256 of
+# https://github.com/PowerShell/PowerShell/releases/tag/v7.7.0
+#   linux-x64.tar.gz c89d9c682d2c403dfe726f3df948e359675235a5bd6fab535776de69729ca0cb
+#   win-x64.zip      7c74e03b20a75b59715847439d046a6214b1863ee79b187872980f139bb4a05f
+name: Install PowerShell 7
+description: Download a pinned PowerShell 7 release (default 7.6 LTS), verify its SHA-256, and put it first on PATH.
 inputs:
   version:
-    description: PowerShell release to install.
-    default: '7.6.9'
+    description: PowerShell release to install. Pass both sha256 inputs when you change it.
+    default: '7.6.10'
   sha256-linux:
     description: SHA-256 of powershell-<version>-linux-x64.tar.gz.
-    default: '1da6d6d6035d651f20e70ddee7c4c15ac6ab8b9fb40ee92240d91263f28a884b'
+    default: 'e261cabc91c78a9afe8d1e5f24731ab0d38204735ab2ec94b0af55102652e10d'
   sha256-windows:
     description: SHA-256 of PowerShell-<version>-win-x64.zip.
-    default: 'ce7484804c0f0ad4dda10c958e71acdaf7eebfb22505c1b480f89e0e9f1da94d'
+    default: '7d871531806eb1646264e4bbabd9f0c30c23355591bc756bb9909448c29ae166'
 runs:
   using: composite
   steps:
