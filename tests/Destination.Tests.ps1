@@ -31,6 +31,3 @@ Describe 'Repository destination protection' {
         Get-Content -LiteralPath $sentinel | Should -Be 'keep'
     }
 }
-
-# Skipped: repository edits, test execution, and demo execution in this read-only review.
-# Risk: ancestor destinations and symbolic-link aliases remain outside this fix.

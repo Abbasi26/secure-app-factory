@@ -103,7 +103,10 @@ jobs:
         uses: $/.github/actions/install-pwsh
       - name: Check every apps/<id> offline
         shell: pwsh
-        run: ./scripts/Test-Apps.ps1 -SummaryPath $env:GITHUB_STEP_SUMMARY
+        run: ./scripts/Test-Apps.ps1 -FailOnWarning -SummaryPath $env:GITHUB_STEP_SUMMARY
+      - name: No Python startup hooks in the repository
+        shell: pwsh
+        run: ./scripts/Test-PythonStartupHooks.ps1 -Path . -Recurse -SummaryPath $env:GITHUB_STEP_SUMMARY
 
   demo:
     name: Offline demo

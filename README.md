@@ -19,6 +19,14 @@
 
 Secure App Factory is a GitHub Actions template and a PowerShell 7 module that builds a Windows package from a pinned vendor installer: it checks the SHA-256 and the Authenticode policy, wraps the file with PSAppDeployToolkit 4.1, and can produce an `.intunewin`, a CycloneDX SBOM, and a local provenance record.
 
+## Demo video
+
+[![Demo video for secure-app-factory](docs/media/brag.jpg)](docs/media/brag.mp4)
+
+Secure App Factory turns a pinned installer manifest into an inspectable packaging run: SHA-256 and Authenticode policy in; REPORT.md, CycloneDX SBOM, provenance, and optional .intunewin output out. Offline demo: `pwsh -NoLogo -File ./demo/Invoke-Demo.ps1`. (Click the image to play the video.)
+
+Music: Sascha Ende ([ende.app](https://ende.app)), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
 ## The problem
 
 A packaging script that downloads "the latest 7-Zip" will wrap a different file the next time the vendor ships a release. The official 7-Zip 26.04 x64 executable is not Authenticode-signed, so a signature check alone cannot tell a reviewed build from a swapped one. The control that still works is a SHA-256 pin. `apps/7zip/app.yaml` pins `7z2604-x64.exe` to `d54bf805f9f3704d1e8db2fa3498ae7ef2df0312b40b558e7c71c734430a665d`, the digest GitHub publishes for that release asset. The build stops when the downloaded bytes do not match.
@@ -114,10 +122,28 @@ pwsh -NoLogo -File ./scripts/Test-Apps.ps1
 | Severity | Examples |
 | --- | --- |
 | Error | YAML or schema errors, no SHA-256 pin, `trust.value` and `lock.json` disagree, a folder name `-App` cannot select |
-| Warning | the URL and file name do not contain the version, a signature rule without a leaf thumbprint, a lock recorded for another URL, a fixed drive letter in a path, two apps with the same URL |
+| Warning | the URL and file name do not contain the version, `architecture` and the file name disagree (x64 with x86/win32/arm64), a signature rule without a leaf thumbprint, a lock recorded for another URL, a fixed drive letter in a path, two apps with the same URL |
 | Info | the hash pin is the only control (unsigned installer), an Evergreen source |
 
-The script exits 1 on an error, or on a warning with `-FailOnWarning`. `-SummaryPath $env:GITHUB_STEP_SUMMARY` appends a Markdown table; the Catalog check job in the workflow does that on every pull request.
+The script exits 1 on an error, or on a warning with `-FailOnWarning`. `-SummaryPath $env:GITHUB_STEP_SUMMARY` appends a Markdown table; the Catalog check job in the workflow does that on every pull request. `-JsonPath` writes the same findings as a JSON array of `{ App, Severity, Check, Message }` objects, so other tools and CI can consume them without parsing Markdown.
+
+### Check Python startup hooks
+
+```powershell
+pwsh -NoLogo -File ./scripts/Test-PythonStartupHooks.ps1                 # site-packages of python3/python on PATH
+pwsh -NoLogo -File ./scripts/Test-PythonStartupHooks.ps1 -Path . -Recurse  # a source tree or package folder
+```
+
+Python runs every line of a `.pth` file in `site-packages` that starts with `import ` on each interpreter start, even when nothing imports the package. The malicious `agent-framework` 1.26.1 and 1.26.2 releases on PyPI used this to steal credentials ([OSV MAL-2026-20101](https://osv.dev/vulnerability/MAL-2026-20101)). `Test-PythonStartupHook` reads the `.pth` files as text and never runs Python code. It reports one status per file:
+
+| Status | Meaning |
+| --- | --- |
+| Malicious | a known indicator file name: `agent_framework_meta.pth` (1.26.1), `af_runtime_diag.pth` (1.26.2) |
+| Suspicious | at least one executable line that is not on the allow list |
+| Allowed | executable lines that exactly match setuptools (`distutils-precedence.pth`, `__editable__.*.pth`), virtualenv (`_virtualenv.pth`), pywin32, or a name passed to `-AllowFile` |
+| PathsOnly | only path entries and comments |
+
+The script exits 1 on Malicious or Suspicious. The Catalog check job runs it on the repository tree.
 
 ### Add an app
 
@@ -129,6 +155,8 @@ New-SafAppManifest -Id example -Name "Example" -Version 1.2.3 -Publisher "Exampl
 ```
 
 It writes `apps/example/app.yaml` and a matching `lock.json`. The SHA-256 comes from `-Sha256` (the digest the vendor publishes) or from `-InstallerPath`, a file you already downloaded and reviewed. It does not download anything. Add `-SignatureSubject` and `-SignatureThumbprint` for a signed installer. The manifest is checked against the schema before it is written. Use `-WhatIf` to preview and `-Force` to replace an existing app.
+
+For updating an existing app when the vendor publishes a new release, see [Updating an app version and hash pins](docs/updating-an-app.md).
 
 ### Commands
 
@@ -148,6 +176,7 @@ It writes `apps/example/app.yaml` and a matching `lock.json`. The SHA-256 comes 
 | `Test-SafAppCatalog` | Reviews every `apps/<id>` folder offline and returns findings. |
 | `ConvertTo-SafCatalogMarkdown` | Renders those findings as a Markdown table. |
 | `New-SafAppManifest` | Writes `app.yaml` and `lock.json` for a reviewed installer. Refuses to overwrite without `-Force`. |
+| `Test-PythonStartupHook` | Lists `.pth` files with executable lines and flags known malicious ones. Reads files only. |
 
 ## Required permissions
 

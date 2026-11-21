@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `Test-PythonStartupHook` and `scripts/Test-PythonStartupHooks.ps1`: list Python `.pth` files that run code at interpreter start. Known indicator names from the malicious `agent-framework` 1.26.1/1.26.2 releases (`agent_framework_meta.pth`, `af_runtime_diag.pth`, [MAL-2026-20101](https://osv.dev/vulnerability/MAL-2026-20101)) are Malicious; other executable lines are Suspicious unless they exactly match setuptools, virtualenv, editable-install or pywin32 hooks or a name passed to `-AllowFile`. Reads files only. Exit 1 on Malicious or Suspicious. The Catalog check job runs it on the repository tree. Works on Windows PowerShell 5.1.
 - CI: Pester runs on PowerShell 7.6 LTS (7.6.10) and PowerShell 7.7 (7.7.0) on Linux and Windows; every other `pwsh` job (catalog, demo, packaging, PSScriptAnalyzer) runs 7.6 LTS. Both releases are SHA-256 pinned and version asserted through `.github/actions/install-pwsh` instead of the runner's preinstalled pwsh. Supported: Windows PowerShell 5.1 (module), PowerShell 7.6 (LTS), PowerShell 7.7. PowerShell 7.4 and 7.5 reached end of support on 10 Nov 2026 and are no longer tested ([support lifecycle](https://learn.microsoft.com/en-us/powershell/scripting/install/powershell-support-lifecycle)). A separate Pester job runs on `windows-latest` with `shell: powershell` so Windows PowerShell 5.1 is required and must stay green. The module's `PowerShellVersion` is 5.1. Packaging scripts (`Invoke-Package.ps1`, `Invoke-Demo.ps1`, `Test-Apps.ps1`) still require PowerShell 7.
 
 ## 0.2.0 - 2026-10-28
