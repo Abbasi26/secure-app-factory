@@ -371,6 +371,9 @@ function Send-IntunePackage {
     }
     $steps.Add('content-version')
     $versionId = [string](Get-SafProp -Object $version -Name @('id'))
+    if ([string]::IsNullOrWhiteSpace($versionId)) {
+        throw 'Graph did not return a content version id.'
+    }
 
     $metadata = Get-SafIntuneWinMetadata -Path $IntuneWinPath
     $fileBody = ConvertTo-SafJson -Value ([ordered]@{
@@ -390,6 +393,9 @@ function Send-IntunePackage {
     }
     $steps.Add('create-file')
     $fileId = [string](Get-SafProp -Object $file -Name @('id'))
+    if ([string]::IsNullOrWhiteSpace($fileId)) {
+        throw 'Graph did not return a content file id.'
+    }
     $fileUri = "$base/deviceAppManagement/mobileApps/$appId/microsoft.graph.win32LobApp/contentVersions/$versionId/files/$fileId"
 
     $ready = Wait-SafFileState -Uri $fileUri -Token $token -Desired 'azureStorageUriRequestSuccess' -FailStates @('azureStorageUriRequestFailed') -Invoker $HttpInvoker -MaxAttempts $MaxAttempts -DelaySeconds $PollDelaySeconds

@@ -391,6 +391,62 @@ Describe 'Intune upload gate' {
         $log.Calls | Should -Be 0
     }
 
+    It 'stops when the content version response has a <Name> id' -TestCases @(
+        @{ Name = 'missing'; Response = @{} }
+        @{ Name = 'null'; Response = @{ id = $null } }
+        @{ Name = 'empty'; Response = @{ id = '' } }
+        @{ Name = 'whitespace'; Response = @{ id = '   ' } }
+    ) {
+        $log = @{ Calls = (New-Object System.Collections.Generic.List[object]) }
+        $badResponse = $Response
+        $invoker = {
+            param($Request)
+            $log.Calls.Add($Request)
+            $uri = [string]$Request.Uri
+            if ($uri -like '*/oauth2/v2.0/token') { return @{ access_token = 'token-value' } }
+            if ($Request.Method -eq 'POST' -and $uri -match '/mobileApps$') { return @{ id = 'app-1' } }
+            if ($Request.Method -eq 'POST' -and $uri -match '/contentVersions$') { return $badResponse }
+            throw "Unexpected request: $($Request.Method) $uri"
+        }.GetNewClosure()
+
+        { Send-IntunePackage -Manifest $script:UploadManifest -IntuneWinPath $script:IntuneWin -Upload -TenantId '00000000-0000-0000-0000-000000000000' -ClientId '11111111-1111-1111-1111-111111111111' -ClientSecret 'test-secret' -HttpInvoker $invoker -PollDelaySeconds 0 } |
+            Should -Throw '*Graph did not return a content version id.*'
+        $log.Calls.Count | Should -Be 3
+        ($log.Calls.Method -join ',') | Should -Be 'POST,POST,POST'
+        $log.Calls[0].Uri | Should -Be 'https://login.microsoftonline.com/00000000-0000-0000-0000-000000000000/oauth2/v2.0/token'
+        $log.Calls[1].Uri | Should -Be 'https://graph.microsoft.com/beta/deviceAppManagement/mobileApps'
+        $log.Calls[2].Uri | Should -Be 'https://graph.microsoft.com/beta/deviceAppManagement/mobileApps/app-1/microsoft.graph.win32LobApp/contentVersions'
+    }
+
+    It 'stops when the content file response has a <Name> id' -TestCases @(
+        @{ Name = 'missing'; Response = @{} }
+        @{ Name = 'null'; Response = @{ id = $null } }
+        @{ Name = 'empty'; Response = @{ id = '' } }
+        @{ Name = 'whitespace'; Response = @{ id = '   ' } }
+    ) {
+        $log = @{ Calls = (New-Object System.Collections.Generic.List[object]) }
+        $badResponse = $Response
+        $invoker = {
+            param($Request)
+            $log.Calls.Add($Request)
+            $uri = [string]$Request.Uri
+            if ($uri -like '*/oauth2/v2.0/token') { return @{ access_token = 'token-value' } }
+            if ($Request.Method -eq 'POST' -and $uri -match '/mobileApps$') { return @{ id = 'app-1' } }
+            if ($Request.Method -eq 'POST' -and $uri -match '/contentVersions$') { return @{ id = '3' } }
+            if ($Request.Method -eq 'POST' -and $uri -match '/files$') { return $badResponse }
+            throw "Unexpected request: $($Request.Method) $uri"
+        }.GetNewClosure()
+
+        { Send-IntunePackage -Manifest $script:UploadManifest -IntuneWinPath $script:IntuneWin -Upload -TenantId '00000000-0000-0000-0000-000000000000' -ClientId '11111111-1111-1111-1111-111111111111' -ClientSecret 'test-secret' -HttpInvoker $invoker -PollDelaySeconds 0 } |
+            Should -Throw '*Graph did not return a content file id.*'
+        $log.Calls.Count | Should -Be 4
+        ($log.Calls.Method -join ',') | Should -Be 'POST,POST,POST,POST'
+        $log.Calls[0].Uri | Should -Be 'https://login.microsoftonline.com/00000000-0000-0000-0000-000000000000/oauth2/v2.0/token'
+        $log.Calls[1].Uri | Should -Be 'https://graph.microsoft.com/beta/deviceAppManagement/mobileApps'
+        $log.Calls[2].Uri | Should -Be 'https://graph.microsoft.com/beta/deviceAppManagement/mobileApps/app-1/microsoft.graph.win32LobApp/contentVersions'
+        $log.Calls[3].Uri | Should -Be 'https://graph.microsoft.com/beta/deviceAppManagement/mobileApps/app-1/microsoft.graph.win32LobApp/contentVersions/3/files'
+    }
+
     It 'uploads only the Graph sequence and keeps the secret out of the result' {
         $log = @{ Calls = (New-Object System.Collections.Generic.List[object]); Gets = 0 }
         $secret = 'super-secret-value'
