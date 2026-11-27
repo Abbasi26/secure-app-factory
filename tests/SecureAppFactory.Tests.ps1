@@ -499,6 +499,28 @@ Describe 'Repository hygiene' {
         $tools.intuneWinAppUtil.archiveUrl | Should -Match '^https://github.com/microsoft/Microsoft-Win32-Content-Prep-Tool/'
     }
 
+    It 'extracts a zip entry with consecutive dots in its file name' {
+        $zip = Join-Path $TestDrive 'safe-dots.zip'
+        $dest = Join-Path $TestDrive 'safe-dots-out'
+        Add-Type -AssemblyName System.IO.Compression
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        $archive = [System.IO.Compression.ZipFile]::Open($zip, [System.IO.Compression.ZipArchiveMode]::Create)
+        try {
+            $entry = $archive.CreateEntry('release..old.txt')
+            $writer = New-Object System.IO.StreamWriter ($entry.Open())
+            try { $writer.Write('safe content') } finally { $writer.Dispose() }
+        }
+        finally { $archive.Dispose() }
+
+        InModuleScope SecureAppFactory -Parameters @{ ZipPath = $zip; Destination = $dest } {
+            Expand-SafZip -ZipPath $ZipPath -Destination $Destination
+        }
+
+        $extracted = Join-Path $dest 'release..old.txt'
+        Test-Path -LiteralPath $extracted | Should -BeTrue
+        Get-Content -Raw -LiteralPath $extracted | Should -Be 'safe content'
+    }
+
     It 'rejects a zip entry that escapes the destination' {
         $zip = Join-Path $TestDrive 'evil.zip'
         $dest = Join-Path $TestDrive 'zip-out'

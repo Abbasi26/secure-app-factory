@@ -246,16 +246,20 @@ function Expand-SafZip {
         New-Item -ItemType Directory -Path $destRoot -Force | Out-Null
     }
     $prefix = $destRoot.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+    $pathComparison = if (Get-SafIsWindows) {
+        [System.StringComparison]::OrdinalIgnoreCase
+    }
+    else {
+        [System.StringComparison]::Ordinal
+    }
     $zip = [System.IO.Compression.ZipFile]::OpenRead($ZipPath)
     try {
         foreach ($entry in $zip.Entries) {
             $relative = ($entry.FullName -replace '\\', '/').TrimStart('/')
             if ([string]::IsNullOrWhiteSpace($relative)) { continue }
-            if ($relative.Contains('..')) {
-                throw "Refusing zip entry that escapes the destination: $($entry.FullName)"
-            }
             $target = [System.IO.Path]::GetFullPath((Join-Path $destRoot $relative))
-            if (-not $target.StartsWith($prefix) -and $target -ne $destRoot) {
+            if (-not $target.StartsWith($prefix, $pathComparison) -and
+                -not [string]::Equals($target, $destRoot, $pathComparison)) {
                 throw "Refusing zip entry that escapes the destination: $($entry.FullName)"
             }
             $isDirectory = $entry.FullName.EndsWith('/') -or $entry.FullName.EndsWith('\')
